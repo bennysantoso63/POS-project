@@ -1,6 +1,6 @@
 import { 
   LayoutDashboard, ShoppingCart, Users, Package, Activity, 
-  ReceiptText, Settings, LogOut, Store, Truck, Scan, Wallet, Landmark, CreditCard 
+  ReceiptText, Settings, LogOut, Store, Truck, Scan, Wallet, Landmark, CreditCard, BrainCircuit
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, onTabChange, isAdmin, currentUser, activeSession, onLogout, onCloseShift, onOpenPettyCash }) {
@@ -10,12 +10,15 @@ export default function Sidebar({ activeTab, onTabChange, isAdmin, currentUser, 
     ...(isAdmin ? [{ id: 'accounting', icon: Landmark, label: 'Akuntansi' }] : []),
     ...(isAdmin ? [{ id: 'purchasing', icon: Truck, label: 'Kulakan' }] : []),
     ...(isAdmin ? [{ id: 'crm', icon: Users, label: 'Pelanggan' }] : []),
-    ...(isAdmin ? [{ id: 'piutang', icon: CreditCard, label: 'Piutang' }] : []),
+    ...(isAdmin ? [{ id: 'piutang', icon: CreditCard, label: 'Buku Bon' }] : []),
+
     ...(isAdmin ? [{ id: 'inventory', icon: Package, label: 'Data Induk' }] : []),
     ...(isAdmin ? [{ id: 'cycle_count', icon: Scan, label: 'Opname' }] : []),
     ...(isAdmin ? [{ id: 'monitoring', icon: Activity, label: 'Monitor' }] : []),
-    { id: 'history', icon: ReceiptText, label: 'Riwayat' }
-  ];
+     { id: 'history', icon: ReceiptText, label: 'Riwayat' },
+     ...(isAdmin ? [{ id: 'intelligence', icon: BrainCircuit, label: 'Ling-Ling' }] : [])
+
+   ];
 
   return (
     <nav className="hidden md:flex w-24 bg-slate-900 border-r border-slate-800 flex-col items-center py-8 shrink-0 z-20 shadow-2xl relative">

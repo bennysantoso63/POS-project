@@ -17,6 +17,8 @@ const fnb = require('../src/db/queries/fnb');
 const expenses = require('../src/db/queries/expenses');
 const cloudSync = require('../src/db/queries/cloudSync');
 const syncManager = require('../src/db/queries/syncManager');
+const sembahyangAI = require('./queries/sembahyang_ai');
+
 
 // Initialize DB Tables
 cloudSync.initSyncTable();
@@ -179,7 +181,11 @@ function registerIpcHandlers() {
         }
     });
     ipcMain.handle('api-get-sync-health', () => syncManager.getSyncHealth());
+
+    // [Sprint 13] Sembahyang Intelligence Engine
+    sembahyangAI.registerSembahyangIpc(ipcMain);
 }
+
 
 app.whenReady().then(() => {
     registerIpcHandlers();

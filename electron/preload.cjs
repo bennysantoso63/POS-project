@@ -76,5 +76,12 @@ contextBridge.exposeInMainWorld('api', {
     getExpenses: () => ipcRenderer.invoke('api-get-expenses'),
 
     // Cloud Sync
-    syncCloud: (options) => ipcRenderer.invoke('api-sync-cloud', options)
+    syncCloud: (options) => ipcRenderer.invoke('api-sync-cloud', options),
+
+    // Sprint 13 - Sembahyang Intelligence
+    getSembahyangRFM: () => ipcRenderer.invoke('api-sembahyang-rfm'),
+    getSembahyangBurnRate: () => ipcRenderer.invoke('api-sembahyang-burnrate'),
+    getSembahyangApriori: () => ipcRenderer.invoke('api-sembahyang-apriori'),
+    askLingLing: (question) => ipcRenderer.invoke('api-sembahyang-chat', question)
 });
+

@@ -3,8 +3,10 @@ import {
   Search, Plus, Minus, Trash2, Receipt, 
   Banknote, CreditCard, Users, PauseCircle, Package, 
   Coffee, Utensils, XCircle, AlertCircle, Barcode,
-  ShoppingCart, Lock, Printer, Zap
+  ShoppingCart, Lock, Printer, Zap, Moon, TrendingUp
 } from 'lucide-react';
+
+
 import { Modal } from './Modals';
 
 export default function CashierView({ 
@@ -18,8 +20,26 @@ export default function CashierView({
   onHoldBill, 
   onRestoreBill,
   onOpenShift,
-  showToast 
+  showToast,
+  aprioriRules = [] // [Sprint 13] Data Science Injection
 }) {
+
+  // =========================================================================
+  // 🌙 LUNAR EVENT ENGINE (Dynamic Seasonality)
+  // =========================================================================
+  const getUpcomingLunarEvent = () => {
+    const today = new Date();
+    const day = today.getDate(); // Simulasi deteksi fase bulan
+    
+    if (day >= 13 && day <= 15) return { name: 'Cap Go', daysLeft: 15 - day };
+    if (day >= 28 || day === 1) {
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        return { name: 'Ce It', daysLeft: day === 1 ? 0 : (daysInMonth - day + 1) };
+    }
+    return null;
+  };
+
+
   // --- STATES ---
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState('');
@@ -44,6 +64,33 @@ export default function CashierView({
   useEffect(() => {
     if (searchRef.current) searchRef.current.focus();
   }, [activeSession]);
+
+  // =========================================================================
+  // 🧠 [Sprint 13] DATA SCIENCE ENGINE: AI NUDGES
+  // =========================================================================
+  const lunarInsight = useMemo(() => {
+    if (!selectedCustomerId || !customers?.length) return null;
+    const customer = customers.find(c => c.id === parseInt(selectedCustomerId, 10));
+    if (!customer) return null;
+
+    const lunarEvent = getUpcomingLunarEvent();
+    if (!lunarEvent) return null; // Nudge hanya muncul jika mendekati perayaan (H-2)
+
+    const timeText = lunarEvent.daysLeft === 0 ? "Hari ini" : lunarEvent.daysLeft === 1 ? "Besok" : "Lusa";
+    return `${timeText} perayaan ${lunarEvent.name}! ${customer.name} biasanya butuh Dupa ekstra. Tawarkan sekarang?`;
+  }, [selectedCustomerId, customers]);
+
+
+  const aprioriSuggestion = useMemo(() => {
+    if (cart.length === 0 || !aprioriRules?.length) return null;
+    const lastItem = cart[cart.length - 1].name;
+    const rule = aprioriRules.find(r => r.primary === lastItem);
+    if (rule) {
+      return `💡 Insight: ${Math.round(rule.confidence)}% orang beli ${lastItem} juga beli ${rule.secondary}.`;
+    }
+    return null;
+  }, [cart, aprioriRules]);
+
 
   // --- LOGIC: FILTER PRODUCTS ---
   const filteredProducts = useMemo(() => {
@@ -204,11 +251,13 @@ export default function CashierView({
   }
 
   return (
-    <div className="flex h-full w-full bg-slate-100 overflow-hidden animate-in fade-in duration-300">
+    <div className="flex h-full w-full bg-white dark:bg-[#141E30] overflow-hidden animate-in fade-in duration-300 transition-colors">
+
       
       {/* KOLOM 1: NAVIGASI KATEGORI (MOKA STYLE) */}
-      <div className="w-24 md:w-32 bg-white border-r border-slate-200 flex flex-col items-center py-4 gap-4 shrink-0 overflow-y-auto">
-        <button onClick={() => setActiveCategory('Semua')} className={`flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl transition-all ${activeCategory === 'Semua' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+      <div className="w-24 md:w-32 bg-white dark:bg-[#1A2640] border-r border-slate-200 dark:border-[#35577D]/30 flex flex-col items-center py-4 gap-4 shrink-0 overflow-y-auto transition-colors">
+        <button onClick={() => setActiveCategory('Semua')} className={`flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl transition-all ${activeCategory === 'Semua' ? 'bg-[#3196E2] dark:bg-[#35577D] text-white shadow-lg shadow-[#3196E2]/30' : 'bg-slate-50 dark:bg-[#243350] text-slate-500 dark:text-[#64748b] hover:bg-slate-100 dark:hover:bg-[#35577D]/20'}`}>
+
             <Package className="w-6 h-6 mb-2"/>
             <span className="text-[10px] font-bold">Semua</span>
         </button>
@@ -218,7 +267,9 @@ export default function CashierView({
             const catId = typeof cat === 'string' ? `cat-${idx}` : cat?.id;
             
             return (
-              <button key={catId} onClick={() => setActiveCategory(catName)} className={`flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl transition-all ${activeCategory === catName ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+              <button key={catId} onClick={() => setActiveCategory(catName)} className={`flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl transition-all ${activeCategory === catName ? 'bg-[#3196E2] dark:bg-[#35577D] text-white shadow-lg shadow-[#3196E2]/30' : 'bg-slate-50 dark:bg-[#243350] text-slate-500 dark:text-[#64748b] hover:bg-slate-100 dark:hover:bg-[#35577D]/20'}`}>
+
+
                 {catName?.toLowerCase().includes('minum') ? <Coffee className="w-6 h-6 mb-2"/> : 
                   catName?.toLowerCase().includes('makan') ? <Utensils className="w-6 h-6 mb-2"/> : <Package className="w-6 h-6 mb-2"/>}
                 <span className="text-[10px] font-bold text-center leading-tight px-1">{catName}</span>
@@ -254,12 +305,30 @@ export default function CashierView({
 
       {/* KOLOM 2: GRID PRODUK */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="px-6 py-4 bg-slate-50 flex items-center z-10 shrink-0">
+        <header className="px-6 py-4 bg-white dark:bg-[#141E30] flex items-center z-10 shrink-0 transition-colors">
           <div className="relative w-full max-w-md">
-            <Search className="absolute left-4 top-3 w-4 h-4 text-slate-400" />
-            <input ref={searchRef} type="text" placeholder="Cari Nama / Scan Barcode..." value={search} onChange={(e)=>setSearch(e.target.value)} className="w-full bg-white border border-slate-200 rounded-2xl py-2.5 pl-11 pr-4 text-sm font-bold text-slate-700 focus:border-blue-500 outline-none transition-all shadow-sm" />
+            <Search className="absolute left-4 top-3 w-4 h-4 text-slate-400 dark:text-[#8BA3C0]" />
+            <input ref={searchRef} type="text" placeholder="Cari Nama / Scan Barcode..." value={search} onChange={(e)=>setSearch(e.target.value)} className="w-full bg-white dark:bg-[#243350] border border-slate-200 dark:border-[#35577D]/30 rounded-2xl py-2.5 pl-11 pr-4 text-sm font-bold text-slate-700 dark:text-[#F0FAFA] focus:border-[#3196E2] dark:focus:border-[#38B2AC] outline-none transition-all shadow-sm placeholder-slate-400 dark:placeholder-[#8BA3C0]" />
           </div>
+
         </header>
+
+        {/* --- [Sprint 13] AI NUDGE BANNER --- */}
+        <div className="flex flex-col gap-3 mb-2 px-6" aria-live="polite">
+          {lunarInsight && (
+            <div className="p-4 bg-[#FF826C]/10 border border-[#FF826C]/20 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300">
+              <div className="p-2 bg-[#FF826C]/20 rounded-lg shrink-0"><Moon className="w-5 h-5 text-[#FF826C]"/></div>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{lunarInsight}</p>
+            </div>
+          )}
+          {aprioriSuggestion && (
+            <div className="p-4 bg-[#38B2AC]/10 border border-[#38B2AC]/20 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 delay-100">
+              <div className="p-2 bg-[#38B2AC]/20 rounded-lg shrink-0"><TrendingUp className="w-5 h-5 text-[#38B2AC]"/></div>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{aprioriSuggestion}</p>
+            </div>
+          )}
+        </div>
+
 
         <div className="flex-1 overflow-y-auto p-6 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 content-start">
           {filteredProducts.map(p => {
@@ -299,9 +368,10 @@ export default function CashierView({
       </div>
 
       {/* KOLOM 3: KERANJANG (BILLING PIPELINE) */}
-      <div className="w-full md:w-[380px] bg-white flex flex-col shadow-2xl shrink-0 z-20 border-l border-slate-200">
-        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
-          <h2 className="font-black text-slate-800 flex items-center gap-2"><Receipt className="w-5 h-5 text-blue-600"/> Tagihan Aktif</h2>
+      <div className="w-full md:w-[380px] bg-[#F0FAFA] dark:bg-[#1A2640] flex flex-col shadow-2xl shrink-0 z-20 border-l border-slate-200 dark:border-[#243350] transition-colors">
+        <div className="p-5 border-b border-slate-100 dark:border-[#243350] flex justify-between items-center bg-white dark:bg-[#141E30] shrink-0 transition-colors">
+          <h2 className="font-black text-slate-800 dark:text-slate-100 flex items-center gap-2"><Receipt className="w-5 h-5 text-[#3196E2] dark:text-[#38B2AC]"/> Tagihan Aktif</h2>
+
           {cart.length > 0 && <button onClick={() => {if(window.confirm('Kosongkan keranjang?')) setCart([]);}} className="text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Clear</button>}
         </div>
         

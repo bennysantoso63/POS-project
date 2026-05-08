@@ -13,8 +13,10 @@ export function usePosData() {
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [heldBills, setHeldBills] = useState([]);
+  const [aprioriRules, setAprioriRules] = useState([]);
   const [settings, setSettings] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+
 
   const { activeSession, setSession } = useSessionStore();
 
@@ -33,10 +35,13 @@ export function usePosData() {
         window.api.getCategories(),
         window.api.getHeldBills(),
         window.api.getSessions(),
-        window.api.getExpenses()
+        window.api.getExpenses(),
+        window.api.getSembahyangApriori()
       ]);
 
-      const [p, t, c, as, m, set, sup, po, cat, hb, s, exp] = results.map(r => r.status === 'fulfilled' ? r.value : []);
+
+      const [p, t, c, as, m, set, sup, po, cat, hb, s, exp, ap] = results.map(r => r.status === 'fulfilled' ? r.value : []);
+
       
       setProducts(p || []);
       setTransactions(t || []);
@@ -50,6 +55,8 @@ export function usePosData() {
       setCategories(cat || []);
       setHeldBills(hb || []);
       setExpenses(exp || []);
+      setAprioriRules(ap || []);
+
 
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -99,7 +106,8 @@ export function usePosData() {
 
   return { 
     products, customers, transactions, sessions, movements, settings, 
-    suppliers, purchaseOrders, expenses, categories, heldBills,
+    suppliers, purchaseOrders, expenses, categories, heldBills, aprioriRules,
     isLoading, fetchData, stats 
   };
+
 }
