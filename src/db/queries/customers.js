@@ -1,10 +1,10 @@
-import db from '../db.js';
-import log from 'electron-log';
+const db = require('../db.js');
+const log = require('electron-log');
 
 /**
  * [KB] Manajemen Pelanggan (Customers)
  */
-export function getAllCustomers(includeInactive = false) {
+function getAllCustomers(includeInactive = false) {
     try {
         if (includeInactive) {
             return db.prepare('SELECT * FROM customers ORDER BY name ASC').all();
@@ -16,7 +16,7 @@ export function getAllCustomers(includeInactive = false) {
     }
 }
 
-export function searchCustomers(keyword) {
+function searchCustomers(keyword) {
     try {
         const searchTerm = `%${keyword}%`;
         return db.prepare(`
@@ -30,7 +30,7 @@ export function searchCustomers(keyword) {
     }
 }
 
-export function createCustomer(data) {
+function createCustomer(data) {
     try {
         const stmt = db.prepare(`
             INSERT INTO customers (name, phone, address, notes) 
@@ -44,7 +44,7 @@ export function createCustomer(data) {
     }
 }
 
-export function updateCustomer(id, data) {
+function updateCustomer(id, data) {
     try {
         const stmt = db.prepare(`
             UPDATE customers 
@@ -58,3 +58,10 @@ export function updateCustomer(id, data) {
         return { success: false, error: err.message };
     }
 }
+
+module.exports = {
+    getAllCustomers,
+    searchCustomers,
+    createCustomer,
+    updateCustomer
+};

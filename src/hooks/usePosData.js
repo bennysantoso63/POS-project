@@ -19,21 +19,21 @@ export function usePosData() {
   const { activeSession, setSession } = useSessionStore();
 
   const fetchData = useCallback(async () => {
-    if (!window.electronAPI) return;
+    if (!window.api) return;
     try {
       const results = await Promise.allSettled([
-        window.electronAPI.getProducts(),
-        window.electronAPI.getTransactions(),
-        window.electronAPI.getAllCustomers(),
-        window.electronAPI.getActiveSession(),
-        window.electronAPI.getMovements(),
-        window.electronAPI.getSettings(),
-        window.electronAPI.getAllSuppliers(),
-        window.electronAPI.getAllPurchaseOrders(),
-        window.electronAPI.getAllCategories(),
-        window.electronAPI.getHeldBills(),
-        window.electronAPI.getSessionHistory(),
-        window.electronAPI.getAllExpenses()
+        window.api.getProducts(),
+        window.api.getTransactions(),
+        window.api.getCustomers(),
+        window.api.getActiveSession(),
+        window.api.getStockMovements(),
+        window.api.getSettings(),
+        window.api.getSuppliers(),
+        window.api.getPurchaseOrders(),
+        window.api.getCategories(),
+        window.api.getHeldBills(),
+        window.api.getSessions(),
+        window.api.getExpenses()
       ]);
 
       const [p, t, c, as, m, set, sup, po, cat, hb, s, exp] = results.map(r => r.status === 'fulfilled' ? r.value : []);

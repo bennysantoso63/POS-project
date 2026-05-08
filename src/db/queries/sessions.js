@@ -1,10 +1,10 @@
-import db from '../db.js';
-import log from 'electron-log';
+const db = require('../db.js');
+const log = require('electron-log');
 
 /**
  * [KB] Mendapatkan sesi yang belum ditutup
  */
-export function getActiveSession() {
+function getActiveSession() {
     try {
         return db.prepare('SELECT * FROM cashier_sessions WHERE closed_at IS NULL ORDER BY opened_at DESC LIMIT 1').get();
     } catch (err) {
@@ -16,7 +16,7 @@ export function getActiveSession() {
 /**
  * [KB] Buka sesi kasir baru.
  */
-export function openSession(openingCash) {
+function openSession(openingCash) {
     try {
         const active = getActiveSession();
         if (active) throw new Error('Masih ada sesi kasir yang aktif. Tutup sesi sebelumnya terlebih dahulu.');
@@ -67,7 +67,7 @@ function _calculateCashExpected(sessionId, openingCash) {
 /**
  * [INF] Tutup Shift: Rekonsiliasi Otomatis antara Sistem vs Hitungan Fisik Kasir.
  */
-export function closeSession(sessionId, closingCash, notes = '') {
+function closeSession(sessionId, closingCash, notes = '') {
     try {
         const session = db.prepare('SELECT * FROM cashier_sessions WHERE id = ?').get(sessionId);
         if (!session) throw new Error("Sesi tidak ditemukan.");
@@ -118,13 +118,24 @@ export function closeSession(sessionId, closingCash, notes = '') {
 }
 
 /**
- * [KB] Mendapatkan seluruh riwayat sesi kasir
+ * [NEW] Mendapatkan riwayat sesi
  */
-export function getSessionHistory(limit = 50) {
+function getSessions(limit = 50) {
     try {
         return db.prepare('SELECT * FROM cashier_sessions ORDER BY opened_at DESC LIMIT ?').all(limit);
     } catch (err) {
-        log.error(`getSessionHistory failed: ${err.message}`);
+        log.error(`getSessions failed: ${err.message}`);
         return [];
     }
 }
+
+// Alias untuk getSessionHistory sesuai instruksi Fase 2c
+const getSessionHistory = getSessions;
+
+module.exports = {
+    getActiveSession,
+    openSession,
+    closeSession,
+    getSessions,
+    getSessionHistory
+};

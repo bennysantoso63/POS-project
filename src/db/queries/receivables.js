@@ -1,10 +1,10 @@
-import db from '../db.js';
-import log from 'electron-log';
+const db = require('../db.js');
+const log = require('electron-log');
 
 /**
  * [KB] Manajemen Piutang / Bon (Receivables)
  */
-export function createReceivable(data) {
+function createReceivable(data) {
     try {
         const insertReceivable = db.prepare(`
             INSERT INTO receivables (transaction_id, customer_id, customer_name, customer_phone, amount, due_date, notes)
@@ -18,7 +18,7 @@ export function createReceivable(data) {
     }
 }
 
-export function recordPayment(receivable_id, paymentData, sessionId) {
+function recordPayment(receivable_id, paymentData, sessionId) {
     const insertPayment = db.prepare(`
         INSERT INTO receivable_payments (receivable_id, amount, payment_method, cashier_session_id, notes)
         VALUES (?, ?, ?, ?, ?)
@@ -60,7 +60,7 @@ export function recordPayment(receivable_id, paymentData, sessionId) {
     }
 }
 
-export function voidReceivable(receivable_id, reason) {
+function voidReceivable(receivable_id, reason) {
     try {
         const updateVoid = db.prepare(`
             UPDATE receivables 
@@ -75,7 +75,7 @@ export function voidReceivable(receivable_id, reason) {
     }
 }
 
-export function getReceivableById(id) {
+function getReceivableById(id) {
     try {
         const receivable = db.prepare('SELECT * FROM receivables WHERE id = ?').get(id);
         if (!receivable) return null;
@@ -88,7 +88,7 @@ export function getReceivableById(id) {
     }
 }
 
-export function getAllReceivables(filters = {}) {
+function getAllReceivables(filters = {}) {
     try {
         let query = 'SELECT * FROM receivables WHERE 1=1';
         const params = [];
@@ -106,7 +106,7 @@ export function getAllReceivables(filters = {}) {
     }
 }
 
-export function getReceivableSummary() {
+function getReceivableSummary() {
     try {
         return db.prepare(`
             SELECT 
@@ -123,7 +123,7 @@ export function getReceivableSummary() {
     }
 }
 
-export function getCustomerReceivables(customer_id) {
+function getCustomerReceivables(customer_id) {
     try {
         const receivables = db.prepare('SELECT * FROM receivables WHERE customer_id = ? ORDER BY created_at DESC').all(customer_id);
         const summary = db.prepare(`
@@ -138,3 +138,13 @@ export function getCustomerReceivables(customer_id) {
         return { receivables: [], total_outstanding: 0 };
     }
 }
+
+module.exports = {
+    createReceivable,
+    recordPayment,
+    voidReceivable,
+    getReceivableById,
+    getAllReceivables,
+    getReceivableSummary,
+    getCustomerReceivables
+};

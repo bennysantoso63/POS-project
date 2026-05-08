@@ -1,7 +1,7 @@
-import db from '../db.js';
+const db = require('../db.js');
 
 // Transaksi Atomik
-export const createTransaction = db.transaction((txData) => {
+const createTransaction = db.transaction((txData) => {
   // 1. Insert ke tabel transactions
   const insertTx = db.prepare(`
     INSERT INTO transactions (total, payment_method, amount_paid, change_amount, tx_tier, customer_id, is_receivable, due_date, cashier_session_id, status)
@@ -78,7 +78,7 @@ export const createTransaction = db.transaction((txData) => {
 });
 
 // Void Atomik
-export const voidTransaction = db.transaction((txId) => {
+const voidTransaction = db.transaction((txId) => {
   const tx = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(txId);
   if (!tx || tx.status === 'void') return { success: false, message: 'Transaksi tidak valid atau sudah di-void' };
 
@@ -109,7 +109,7 @@ export const voidTransaction = db.transaction((txId) => {
   return { success: true, message: 'Void berhasil, stok & saldo direvisi' };
 });
 
-export const getTransactions = () => {
+const getTransactions = () => {
   const transactions = db.prepare(`
     SELECT t.*, c.name as customer_name
     FROM transactions t
@@ -131,7 +131,7 @@ export const getTransactions = () => {
 /**
  * [KB] Mendapatkan rangkuman piutang per pelanggan.
  */
-export const getCustomerReceivables = () => {
+const getCustomerReceivables = () => {
     const stmt = db.prepare(`
         SELECT 
             c.id, c.name, c.phone,
@@ -150,7 +150,7 @@ export const getCustomerReceivables = () => {
     }));
 };
 
-export const getPiutangReport = () => {
+const getPiutangReport = () => {
   return db.prepare(`
     SELECT 
       c.id, 
@@ -167,3 +167,10 @@ export const getPiutangReport = () => {
   `).all();
 };
 
+module.exports = {
+  createTransaction,
+  voidTransaction,
+  getTransactions,
+  getCustomerReceivables,
+  getPiutangReport
+};

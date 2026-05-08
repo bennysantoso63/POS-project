@@ -1,10 +1,10 @@
-import db from '../db.js';
-import log from 'electron-log';
+const db = require('../db.js');
+const log = require('electron-log');
 
 /**
  * [KB] Manajemen Supplier (Pemasok)
  */
-export function getAllSuppliers(includeInactive = false) {
+function getAllSuppliers(includeInactive = false) {
     try {
         if (includeInactive) return db.prepare('SELECT * FROM suppliers ORDER BY name ASC').all();
         return db.prepare('SELECT * FROM suppliers WHERE is_active = 1 ORDER BY name ASC').all();
@@ -14,7 +14,7 @@ export function getAllSuppliers(includeInactive = false) {
     }
 }
 
-export function searchSuppliers(keyword) {
+function searchSuppliers(keyword) {
     try {
         const searchTerm = `%${keyword}%`;
         return db.prepare('SELECT * FROM suppliers WHERE (name LIKE ? OR phone LIKE ?) AND is_active = 1 LIMIT 10').all(searchTerm, searchTerm);
@@ -24,7 +24,7 @@ export function searchSuppliers(keyword) {
     }
 }
 
-export function createSupplier(data) {
+function createSupplier(data) {
     try {
         const stmt = db.prepare(`INSERT INTO suppliers (name, contact_name, phone, address, notes) VALUES (@name, @contact_name, @phone, @address, @notes)`);
         const result = stmt.run(data);
@@ -35,7 +35,7 @@ export function createSupplier(data) {
     }
 }
 
-export function updateSupplier(id, data) {
+function updateSupplier(id, data) {
     try {
         const stmt = db.prepare(`UPDATE suppliers SET name=@name, contact_name=@contact_name, phone=@phone, address=@address, notes=@notes, is_active=@is_active WHERE id=@id`);
         const result = stmt.run({ ...data, id });
@@ -45,3 +45,10 @@ export function updateSupplier(id, data) {
         return { success: false, error: err.message };
     }
 }
+
+module.exports = {
+    getAllSuppliers,
+    searchSuppliers,
+    createSupplier,
+    updateSupplier
+};

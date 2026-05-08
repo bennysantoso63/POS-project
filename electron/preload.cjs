@@ -1,100 +1,80 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  // Database Functions
-  createTransaction: (data) => ipcRenderer.invoke('db:createTransaction', data),
-  voidTransaction: (id) => ipcRenderer.invoke('db:voidTransaction', id),
-  getProducts: () => ipcRenderer.invoke('db:getProducts'),
-  getTransactions: () => ipcRenderer.invoke('db:getTransactions'),
-  getCustomers: () => ipcRenderer.invoke('db:getCustomers'),
-  getSessions: () => ipcRenderer.invoke('db:getSessions'),
-  getMovements: () => ipcRenderer.invoke('db:getMovements'),
-  getSettings: () => ipcRenderer.invoke('db:getSettings'),
-  updateSettings: (settings) => ipcRenderer.invoke('db:updateSettings', settings),
-  
-  addProduct: (product) => ipcRenderer.invoke('db:addProduct', product),
-  updateProduct: (product) => ipcRenderer.invoke('db:updateProduct', product),
-  deleteProduct: (id) => ipcRenderer.invoke('db:deleteProduct', id),
+/**
+ * POS MANDIRI ENTERPRISE - CONSOLIDATED IPC BRIDGE
+ * Optimized for Security and Professional Deployment
+ */
+contextBridge.exposeInMainWorld('api', {
+    // 1. AUTH & USER MANAGEMENT
+    checkSetup: () => ipcRenderer.invoke('api-check-setup'),
+    setupAdmin: (data) => ipcRenderer.invoke('api-setup-admin', data),
+    login: (pin) => ipcRenderer.invoke('api-login', pin),
+    getUsers: () => ipcRenderer.invoke('api-get-users'),
+    createUser: (data) => ipcRenderer.invoke('api-create-user', data),
+    updateUser: (id, data) => ipcRenderer.invoke('api-update-user', id, data),
+    deleteUser: (id) => ipcRenderer.invoke('api-delete-user', id),
+    getAuditLogs: () => ipcRenderer.invoke('api-get-audit-logs'),
 
-  addCustomer: (customer) => ipcRenderer.invoke('db:addCustomer', customer),
-  updateCustomer: (customer) => ipcRenderer.invoke('db:updateCustomer', customer),
-  deleteCustomer: (id) => ipcRenderer.invoke('db:deleteCustomer', id),
+    // 2. MASTER DATA
+    getProducts: () => ipcRenderer.invoke('api-get-products'),
+    getCategories: () => ipcRenderer.invoke('api-get-categories'),
+    addProduct: (data) => ipcRenderer.invoke('api-add-product', data),
+    updateProduct: (id, data) => ipcRenderer.invoke('api-update-product', id, data),
+    deleteProduct: (id) => ipcRenderer.invoke('api-delete-product', id),
 
-  openSession: (data) => ipcRenderer.invoke('db:openSession', data),
-  closeSession: (data) => ipcRenderer.invoke('db:closeSession', data),
-  
-  // Hardware Functions
-  printReceipt: (data) => ipcRenderer.invoke('print-receipt', data),
+    // 3. SHIFT & SESSION MANAGEMENT
+    getActiveSession: () => ipcRenderer.invoke('api-get-active-session'),
+    openSession: (openingCash) => ipcRenderer.invoke('api-open-session', openingCash),
+    closeSession: (data) => ipcRenderer.invoke('api-close-session', data),
+    getSessions: () => ipcRenderer.invoke('api-get-sessions'),
 
-  // Authentication & RBAC
-  login: (pin) => ipcRenderer.invoke('users:login', pin),
-  registerUser: (data) => ipcRenderer.invoke('users:register', data),
-  
-  // Sessions (Moka-style)
-  getActiveSession: () => ipcRenderer.invoke('db:getActiveSession'),
-  openSession: (openingCash) => ipcRenderer.invoke('db:openSession', openingCash),
-  closeSession: (data) => ipcRenderer.invoke('db:closeSession', data),
+    // 4. KASIR & TRANSAKSI
+    processCheckout: (txData) => ipcRenderer.invoke('api-process-checkout', txData),
+    voidTransaction: (txId) => ipcRenderer.invoke('api-void-transaction', txId),
+    getTransactions: (filters) => ipcRenderer.invoke('api-get-transactions', filters),
+    
+    // Hold Bills (Draft / Table Management)
+    holdBill: (data) => ipcRenderer.invoke('api-hold-bill', data),
+    getHeldBills: () => ipcRenderer.invoke('api-get-held-bills'),
+    restoreBill: (id) => ipcRenderer.invoke('api-restore-bill', id),
+    discardHeldBill: (id) => ipcRenderer.invoke('api-discard-held-bill', id),
 
-  // Held Bills (Drafts - Moka UX)
-  holdBill: (data) => ipcRenderer.invoke('db:holdBill', data),
-  getHeldBills: () => ipcRenderer.invoke('db:getHeldBills'),
-  restoreBill: (id) => ipcRenderer.invoke('db:restoreBill', id),
-  discardHeldBill: (id) => ipcRenderer.invoke('db:discardHeldBill', id),
-  clearAllHeldBills: () => ipcRenderer.invoke('db:clearAllHeldBills'),
+    // 5. ACCOUNTS RECEIVABLE (CRM)
+    getCustomers: () => ipcRenderer.invoke('api-get-customers'),
+    addCustomer: (data) => ipcRenderer.invoke('api-add-customer', data),
+    createReceivable: (data) => ipcRenderer.invoke('api-create-receivable', data),
+    recordPayment: (data) => ipcRenderer.invoke('api-record-payment', data),
 
-  // Categories
-  getAllCategories: () => ipcRenderer.invoke('db:getAllCategories'),
-  createCategory: (name, order) => ipcRenderer.invoke('db:createCategory', name, order),
-  updateCategory: (id, data) => ipcRenderer.invoke('db:updateCategory', id, data),
-  deleteCategory: (id) => ipcRenderer.invoke('db:deleteCategory', id),
-  getProductsByCategory: (cat) => ipcRenderer.invoke('db:getProductsByCategory', cat),
+    // 6. ACCOUNTS PAYABLE (Hutang)
+    getSuppliers: () => ipcRenderer.invoke('api-get-suppliers'),
+    createSupplier: (data) => ipcRenderer.invoke('api-create-supplier', data),
+    getPurchaseOrders: () => ipcRenderer.invoke('api-get-purchase-orders'),
+    createPurchaseOrder: (data) => ipcRenderer.invoke('api-create-po', data),
+    receivePurchaseOrder: (id) => ipcRenderer.invoke('api-receive-po', id),
+    payPurchaseOrder: (id, data) => ipcRenderer.invoke('api-pay-po', id, data),
 
-  // File Operations
-  exportTransactions: (filter) => ipcRenderer.invoke('db:exportTransactions', filter),
-  importCsv: (csvContent) => ipcRenderer.invoke('db:importCsv', csvContent),
-  
-  // CRM & AR (Receivables)
-  getAllCustomers: (inc) => ipcRenderer.invoke('db:getAllCustomers', inc),
-  searchCustomers: (kw) => ipcRenderer.invoke('db:searchCustomers', kw),
-  createCustomer: (data) => ipcRenderer.invoke('db:createCustomer', data),
-  updateCustomer: (id, data) => ipcRenderer.invoke('db:updateCustomer', id, data),
-  
-  createReceivable: (data) => ipcRenderer.invoke('db:createReceivable', data),
-  recordReceivablePayment: (id, data, sid) => ipcRenderer.invoke('db:recordReceivablePayment', id, data, sid),
-  voidReceivable: (id, res) => ipcRenderer.invoke('db:voidReceivable', id, res),
-  getReceivableById: (id) => ipcRenderer.invoke('db:getReceivableById', id),
-  getAllReceivables: (flt) => ipcRenderer.invoke('db:getAllReceivables', flt),
-  getReceivableSummary: () => ipcRenderer.invoke('db:getReceivableSummary'),
-  getCustomerReceivables: (id) => ipcRenderer.invoke('db:getCustomerReceivables', id),
+    // 7. F&B ENGINE (BOM & KDS)
+    getKdsOrders: () => ipcRenderer.invoke('api-get-kds-orders'),
+    updateKdsStatus: (id, status) => ipcRenderer.invoke('api-update-kds-status', id, status),
+    getIngredients: () => ipcRenderer.invoke('api-get-ingredients'),
+    recordSpoilage: (data) => ipcRenderer.invoke('api-record-spoilage', data),
+    getSpoilages: () => ipcRenderer.invoke('api-get-spoilages'),
+    getRecipe: (productId) => ipcRenderer.invoke('api-get-recipe', productId),
+    saveRecipe: (productId, items) => ipcRenderer.invoke('api-save-recipe', productId, items),
 
-  // Suppliers & AP (Purchasing)
-  getAllSuppliers: (inc) => ipcRenderer.invoke('db:getAllSuppliers', inc),
-  searchSuppliers: (kw) => ipcRenderer.invoke('db:searchSuppliers', kw),
-  createSupplier: (data) => ipcRenderer.invoke('db:createSupplier', data),
-  updateSupplier: (id, data) => ipcRenderer.invoke('db:updateSupplier', id, data),
+    // 8. SETTINGS & HARDWARE
+    getSettings: () => ipcRenderer.invoke('api-get-settings'),
+    saveSettings: (settings) => ipcRenderer.invoke('api-save-settings', settings),
+    printReceipt: (data) => ipcRenderer.invoke('api-print-receipt', data),
+    
+    // Inventory
+    adjustStock: (adjustments) => ipcRenderer.invoke('api-adjust-stock', adjustments),
+    getStockMovements: () => ipcRenderer.invoke('api-get-stock-movements'),
+    
+    // Expenses
+    createExpense: (data) => ipcRenderer.invoke('api-create-expense', data),
+    getExpenses: () => ipcRenderer.invoke('api-get-expenses'),
 
-  createPurchaseOrder: (data) => ipcRenderer.invoke('db:createPurchaseOrder', data),
-  receivePurchaseOrder: (id) => ipcRenderer.invoke('db:receivePurchaseOrder', id),
-  recordPurchasePayment: (id, data, sid) => ipcRenderer.invoke('db:recordPurchasePayment', id, data, sid),
-  voidPurchaseOrder: (id, res) => ipcRenderer.invoke('db:voidPurchaseOrder', id, res),
-  getPurchaseOrderById: (id) => ipcRenderer.invoke('db:getPurchaseOrderById', id),
-  getAllPurchaseOrders: (flt) => ipcRenderer.invoke('db:getAllPurchaseOrders', flt),
-  getAPSummary: () => ipcRenderer.invoke('db:getAPSummary'),
-  getSupplierStatement: (id) => ipcRenderer.invoke('db:getSupplierStatement', id),
-
-  // Utilities
-  adjustStock: (adjustments) => ipcRenderer.invoke('db:adjustStock', adjustments),
-
-  // Expenses (Sprint 7)
-  createExpense: (data) => ipcRenderer.invoke('db:createExpense', data),
-  getAllExpenses: (limit) => ipcRenderer.invoke('db:getAllExpenses', limit),
-  getExpensesByMonth: (y, m) => ipcRenderer.invoke('db:getExpensesByMonth', y, m),
-  getExpensesByCategory: (cat, y, m) => ipcRenderer.invoke('db:getExpensesByCategory', cat, y, m),
-  getExpenseSummaryByCategory: (y, m) => ipcRenderer.invoke('db:getExpenseSummaryByCategory', y, m),
-  updateExpense: (id, data) => ipcRenderer.invoke('db:updateExpense', id, data),
-  deleteExpense: (id) => ipcRenderer.invoke('db:deleteExpense', id),
-
-  // Sessions History
-  getSessionHistory: (limit) => ipcRenderer.invoke('db:getSessionHistory', limit),
+    // Cloud Sync
+    syncCloud: (options) => ipcRenderer.invoke('api-sync-cloud', options)
 });
-

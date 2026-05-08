@@ -43,12 +43,22 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('cashier');
   const [receiptToPrint, setReceiptToPrint] = useState(null);
   const [pin, setPin] = useState('');
+  const [needsSetup, setNeedsSetup] = useState(false);
+  const [setupForm, setSetupForm] = useState({ username: '', pin: '' });
   
   // Settings local state for real-time editing
   const [localSettings, setLocalSettings] = useState({
     name: '', slogan: '', phone: '', address: '', receiptFooter: '',
     tax_type: 'OP', tax_start_year: '2024'
   });
+
+  useEffect(() => {
+    const checkSetup = async () => {
+      const res = await window.api.checkSetup();
+      setNeedsSetup(res);
+    };
+    checkSetup();
+  }, []);
 
   useEffect(() => {
     if (settings) {
@@ -83,7 +93,7 @@ export default function App() {
     if (e) e.preventDefault();
     if (!pin) return;
     
-    const res = await window.electronAPI.login(pin);
+    const res = await window.api.login(pin);
     if (res.success) {
       setCurrentUser(res.user);
       if (res.user.role === 'admin') setActiveTab('dashboard');
@@ -97,7 +107,7 @@ export default function App() {
 
   const handleOpenShift = async (cash) => {
     const val = parseInt(cash.replace(/\D/g, '') || '0');
-    const res = await window.electronAPI.openSession(val);
+    const res = await window.api.openSession(val);
     if (res.success) { 
       setSession({ 
         id: res.id, 
@@ -115,7 +125,7 @@ export default function App() {
 
   const handleCloseShift = async (cash) => {
     const laciFisik = parseInt(cash.replace(/\D/g, '') || '0');
-    const res = await window.electronAPI.closeSession({ 
+    const res = await window.api.closeSession({ 
       sessionId: activeSession.id, 
       closingCash: laciFisik,
       notes: `Tutup oleh ${currentUser.username}`
@@ -140,15 +150,16 @@ export default function App() {
     if (!activeSession && currentUser.role !== 'admin') return toast.error("Buka sesi dulu!");
     
     // [KB] Jika metode adalah piutang, panggil API createReceivable setelah transaksi sukses
-    const res = await window.electronAPI.createTransaction({
+    const res = await window.api.processCheckout({
       ...txData,
+      businessMode: settings.business_mode || 'RETAIL',
       cashier_session_id: activeSession?.id || null,
       userName: currentUser.username
     });
 
     if (res.success) {
       if (txData.payment_method === 'receivable') {
-        await window.electronAPI.createReceivable({
+        await window.api.createReceivable({
           transaction_id: res.txId,
           customer_id: txData.customer_id,
           amount: txData.total,
@@ -179,7 +190,7 @@ export default function App() {
   };
 
   const handleRestoreBill = async (id) => {
-    return await window.electronAPI.restoreBill(id);
+    return await window.api.restoreBill(id);
   };
 
   const handleHoldBill = async (cart, total) => {
@@ -187,7 +198,7 @@ export default function App() {
     const label = prompt("Label Antrian:", `Antrian ${new Date().toLocaleTimeString()}`);
     if (!label) return;
 
-    const res = await window.electronAPI.holdBill({
+    const res = await window.api.holdBill({
       label,
       cartItems: cart
     });
@@ -201,12 +212,12 @@ export default function App() {
   };
 
   const handleAddSupplier = async (data) => {
-    const res = await window.electronAPI.createSupplier(data);
+    const res = await window.api.createSupplier(data);
     if (res.success) { toast.success("Supplier ditambahkan"); fetchData(); }
   };
 
   const handleCreatePO = async (data) => {
-    const res = await window.electronAPI.createPurchaseOrder(data);
+    const res = await window.api.createPurchaseOrder(data);
     if (res.success) { 
       setReceiptToPrint({ type: 'po', data: { ...data, id: res.id, po_number: data.poNumber, created_at: new Date().toLocaleString() } });
       toast.success("PO diterbitkan"); fetchData(); 
@@ -214,12 +225,12 @@ export default function App() {
   };
 
   const handleReceivePO = async (poId) => {
-    const res = await window.electronAPI.receivePurchaseOrder(poId);
+    const res = await window.api.receivePurchaseOrder(poId);
     if (res.success) { toast.success("Barang diterima & Stok diupdate"); fetchData(); }
   };
 
   const handlePettyCashSubmit = async (data) => {
-    const res = await window.electronAPI.createExpense({ 
+    const res = await window.api.createExpense({ 
       amount: data.amount,
       category: data.category || 'opex', // 'opex' | 'non_deductible' | 'prive'
       description: data.description,
@@ -236,13 +247,13 @@ export default function App() {
   };
 
   const handleApplyAdjustments = async (adjustments) => {
-    const res = await window.electronAPI.adjustStock(adjustments.map(a => ({ ...a, userName: currentUser.username })));
+    const res = await window.api.adjustStock(adjustments.map(a => ({ ...a, userName: currentUser.username })));
     if (res.success) { toast.success("Stok Opname disimpan"); fetchData(); }
   };
 
   const handleSaveSettings = async (e) => {
     if (e) e.preventDefault();
-    const res = await window.electronAPI.updateSettings({
+    const res = await window.api.saveSettings({
        store_name: localSettings.name,
        store_slogan: localSettings.slogan,
        store_phone: localSettings.phone,
@@ -256,6 +267,36 @@ export default function App() {
       fetchData();
     }
   };
+
+  if (needsSetup) {
+    return (
+      <div className="flex h-screen bg-slate-950 items-center justify-center relative font-sans overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-slate-950 to-slate-950" />
+        <div className="bg-white/10 backdrop-blur-2xl p-12 rounded-[4rem] shadow-2xl w-full max-w-md flex flex-col items-center animate-in zoom-in-95 duration-500 border border-white/10 relative z-10">
+          <div className="w-24 h-24 bg-blue-600 text-white rounded-3xl flex items-center justify-center mb-8 shadow-xl">
+             <HardDrive className="w-12 h-12"/>
+          </div>
+          <h2 className="text-3xl font-black text-white mb-2 text-center uppercase tracking-tighter">Initial Setup</h2>
+          <p className="text-xs text-blue-300 mb-8 font-bold text-center opacity-60">Daftarkan akun Administrator pertama Anda</p>
+          
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const res = await window.api.setupAdmin(setupForm);
+            if (res.success) {
+              toast.success("Admin berhasil dibuat!");
+              setNeedsSetup(false);
+            } else {
+              toast.error(res.error || "Gagal membuat admin");
+            }
+          }} className="w-full space-y-4">
+            <input type="text" placeholder="Admin Username" required value={setupForm.username} onChange={e=>setSetupForm({...setupForm, username: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-blue-500 transition-all" />
+            <input type="password" placeholder="Admin PIN (4 Digit)" required maxLength="4" value={setupForm.pin} onChange={e=>setSetupForm({...setupForm, pin: e.target.value.replace(/\D/g,'')})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold text-center text-2xl tracking-[0.5em] outline-none focus:border-blue-500 transition-all" />
+            <button type="submit" className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20">MULAI SISTEM</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (
@@ -309,6 +350,8 @@ export default function App() {
         <Toaster position="top-right" />
       </div>
     );
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case 'cashier': return (
@@ -332,9 +375,9 @@ export default function App() {
         <InventoryView 
           products={products} 
           transactions={transactions} 
-          onAddProduct={async (data) => { await window.electronAPI.addProduct(data); fetchData(); }} 
-          onUpdateProduct={async (id, data) => { await window.electronAPI.updateProduct(id, data); fetchData(); }} 
-          onDeleteProduct={async (p) => { if(confirm('Hapus produk ini?')) { await window.electronAPI.deleteProduct(p.id || p); fetchData(); } }} 
+          onAddProduct={async (data) => { await window.api.addProduct(data); fetchData(); }} 
+          onUpdateProduct={async (id, data) => { await window.api.updateProduct(id, data); fetchData(); }} 
+          onDeleteProduct={async (p) => { if(confirm('Hapus produk ini?')) { await window.api.deleteProduct(p.id || p); fetchData(); } }} 
           onStartOpname={(selected) => { setOpnameSelection(selected); setActiveTab('cycle_count'); }} 
           formatIDR={formatIDR} 
         />
@@ -347,7 +390,7 @@ export default function App() {
           onAddSupplier={handleAddSupplier} 
           onCreatePO={handleCreatePO} 
           onReceivePO={handleReceivePO} 
-          onPayPO={async (id, data) => { await window.electronAPI.recordPurchasePayment(id, data, activeSession?.id); fetchData(); }}
+          onPayPO={async (id, data) => { await window.api.payPurchaseOrder(id, data); fetchData(); }}
           showToast={(msg, type) => type === 'error' ? toast.error(msg) : toast.success(msg)}
         />
       );
@@ -357,8 +400,8 @@ export default function App() {
         <RelationsView 
           customers={customers} 
           transactions={transactions} 
-          onRecordPayment={async (data) => { await window.electronAPI.recordReceivablePayment(data.customer_id, { amount: data.amount, payment_method: data.payment_method, notes: data.notes }, activeSession?.id); fetchData(); }} 
-          onAddCustomer={async (data) => { await window.electronAPI.addCustomer(data); fetchData(); }}
+          onRecordPayment={async (data) => { await window.api.recordPayment(data); fetchData(); }} 
+          onAddCustomer={async (data) => { await window.api.addCustomer(data); fetchData(); }}
           showToast={(msg, type) => type === 'error' ? toast.error(msg) : toast.success(msg)}
         />
       );
@@ -366,7 +409,7 @@ export default function App() {
         <HistoryView 
           transactions={transactions} 
           onPrintReceipt={(tx) => setReceiptToPrint({ type: 'transaction', data: tx })} 
-          onVoidTransaction={async (id) => { await window.electronAPI.voidTransaction(id); fetchData(); }} 
+          onVoidTransaction={async (id) => { await window.api.voidTransaction(id); fetchData(); }} 
           currentUser={currentUser} 
           showToast={(msg, type) => type === 'error' ? toast.error(msg) : toast.success(msg)}
         />
@@ -425,9 +468,9 @@ export default function App() {
         onSave={async (e) => { 
           e.preventDefault(); 
           if (editing.product) {
-            await window.electronAPI.updateProduct({ ...forms.product, id: editing.product.id });
+            await window.api.updateProduct(editing.product.id, forms.product);
           } else {
-            await window.electronAPI.addProduct(forms.product);
+            await window.api.addProduct(forms.product);
           }
           setModals({...modals, product: false}); 
           fetchData(); 
@@ -442,14 +485,14 @@ export default function App() {
         onChange={(f) => setForms({...forms, customer: f})} 
         onSave={async (e) => { 
           e.preventDefault(); 
-          await window.electronAPI.createCustomer(forms.customer); 
+          await window.api.addCustomer(forms.customer); 
           setModals({...modals, customer: false}); 
           fetchData(); 
         }} 
         onClose={() => setModals({...modals, customer: false})} 
       />
-      <SyncModal show={modals.sync} onSync={async (e) => { const reader = new FileReader(); reader.onload = async (ev) => { await window.electronAPI.importCsv(ev.target.result); setModals({...modals, sync: false}); fetchData(); }; reader.readAsText(e.target.files[0]); }} onClose={() => setModals({...modals, sync: false})} />
-      <ReceiptModal show={!!receiptToPrint} receipt={receiptToPrint} settings={settings} onPrint={(r) => { window.electronAPI.printReceipt(r.data || r); setReceiptToPrint(null); }} onClose={() => setReceiptToPrint(null)} formatIDR={formatIDR} />
+      <SyncModal show={modals.sync} onSync={async (e) => { const reader = new FileReader(); reader.onload = async (ev) => { await window.api.importCsv(ev.target.result); setModals({...modals, sync: false}); fetchData(); }; reader.readAsText(e.target.files[0]); }} onClose={() => setModals({...modals, sync: false})} />
+      <ReceiptModal show={!!receiptToPrint} receipt={receiptToPrint} settings={settings} onPrint={(r) => { window.api.printReceipt(r.data || r); setReceiptToPrint(null); }} onClose={() => setReceiptToPrint(null)} formatIDR={formatIDR} />
       <Toaster position="top-right" />
     </div>
   );

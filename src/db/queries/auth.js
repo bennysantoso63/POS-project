@@ -1,54 +1,95 @@
-import db from '../db.js';
-import bcrypt from 'bcryptjs';
-import log from 'electron-log';
+const db = require('../db.js');
+const bcrypt = require('bcryptjs');
 
 /**
- * [KB] Autentikasi menggunakan Bcrypt. Melindungi sistem dari pencurian database (DB dump).
+ * AUTH & USER MANAGEMENT (Sprint 9B / 11)
+ * Secure authentication using Bcrypt and Role-Based Access Control (RBAC)
  */
-export async function authenticateUser(pinPlain) {
+
+// 1. Setup & Check
+const checkNeedsSetup = () => {
+    const row = db.prepare('SELECT COUNT(*) as count FROM users').get();
+    return row.count === 0;
+};
+
+// 2. User Management
+const createUser = async (username, pinPlain, role) => {
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const pinHash = await bcrypt.hash(pinPlain, salt);
+        
+        const stmt = db.prepare(`
+            INSERT INTO users (username, pin_hash, role, is_active) 
+            VALUES (?, ?, ?, 1)
+        `);
+        const result = stmt.run(username, pinHash, role);
+        
+        return { success: true, userId: result.lastInsertRowid };
+    } catch (err) {
+        if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+            return { success: false, error: 'Username sudah digunakan!' };
+        }
+        return { success: false, error: err.message };
+    }
+};
+
+const authenticateUser = async (pinPlain) => {
     try {
         const users = db.prepare('SELECT * FROM users WHERE is_active = 1').all();
         
         for (const user of users) {
-            // Karena PIN biasanya angka pendek, kita iterasi semua user aktif (jumlah user biasanya < 10 di POS lokal)
-            // Bcrypt compare is async but bcryptjs also supports sync. 
-            // Here we use async for better non-blocking in main thread if possible.
-            const match = await bcrypt.compare(pinPlain, user.pin_hash);
-            if (match) {
+            const isValid = await bcrypt.compare(pinPlain, user.pin_hash);
+            if (isValid) {
+                // Safety: Never return the hash to frontend
                 const { pin_hash, ...safeUser } = user;
-                log.info(`Auth success: ${user.username} as ${user.role}`);
                 return { success: true, user: safeUser };
             }
         }
-        
-        // Legacy fallback for development/bypass (Admin: 1234, Kasir: 1111)
-        if (pinPlain === '1234' || pinPlain === '1111') {
-            const role = pinPlain === '1234' ? 'admin' : 'kasir';
-            const user = db.prepare('SELECT * FROM users WHERE role = ? AND is_active = 1 LIMIT 1').get(role);
-            if (user) {
-                const { pin_hash, ...safeUser } = user;
-                log.info(`Auth success (Bypass): ${user.username}`);
-                return { success: true, user: safeUser };
-            }
-        }
-
-        return { success: false, error: "PIN tidak valid atau pengguna tidak ditemukan." };
+        return { success: false, error: 'PIN yang Anda masukkan salah!' };
     } catch (err) {
-        log.error(`Auth error: ${err.message}`);
-        return { success: false, error: err.message };
+        return { success: false, error: 'Terjadi kesalahan sistem saat login.' };
     }
-}
+};
 
-/**
- * [KB] Helper untuk mendaftarkan user baru dengan PIN ter-hash.
- */
-export async function registerUser(username, pinPlain, role = 'kasir') {
+const getAllUsers = () => {
+    return db.prepare('SELECT id, username, role, is_active, created_at FROM users').all();
+};
+
+const updateUserStatus = (id, isActive) => {
+    return db.prepare('UPDATE users SET is_active = ? WHERE id = ?').run(isActive ? 1 : 0, id);
+};
+
+// 3. Audit Trail Logic
+const logAudit = (userId, action, target, details) => {
     try {
-        const hash = await bcrypt.hash(pinPlain, 10);
-        const result = db.prepare('INSERT INTO users (username, pin_hash, role) VALUES (?, ?, ?)').run(username, hash, role);
-        return { success: true, id: result.lastInsertRowid };
+        const stmt = db.prepare(`
+            INSERT INTO audit_log (user_id, action, target, details) 
+            VALUES (?, ?, ?, ?)
+        `);
+        stmt.run(userId, action, target, JSON.stringify(details || {}));
+        return { success: true };
     } catch (err) {
-        log.error(`Register user failed: ${err.message}`);
-        return { success: false, message: err.message };
+        console.error('Audit Log Error:', err);
+        return { success: false };
     }
-}
+};
+
+const getAuditLogs = (limit = 100) => {
+    return db.prepare(`
+        SELECT a.*, u.username 
+        FROM audit_log a
+        JOIN users u ON a.user_id = u.id
+        ORDER BY a.timestamp DESC
+        LIMIT ?
+    `).all(limit);
+};
+
+module.exports = {
+    checkNeedsSetup,
+    createUser,
+    authenticateUser,
+    getAllUsers,
+    updateUserStatus,
+    logAudit,
+    getAuditLogs
+};

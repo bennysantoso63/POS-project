@@ -1,10 +1,10 @@
-import db from '../db.js';
-import log from 'electron-log';
+const db = require('../db.js');
+const log = require('electron-log');
 
 /**
  * [KB] Hold Bill (Simpan Antrian)
  */
-export function holdBill(label, cartItems) {
+function holdBill(label, cartItems) {
     try {
         // Simpan dalam format JSON String agar struktur cart tetap utuh (termasuk diskon, pajak, dll)
         const result = db.prepare('INSERT INTO held_bills (label, cart_data) VALUES (?, ?)')
@@ -20,7 +20,7 @@ export function holdBill(label, cartItems) {
 /**
  * [KB] Ambil semua antrian
  */
-export function getHeldBills() {
+function getHeldBills() {
     try {
         const rows = db.prepare('SELECT * FROM held_bills ORDER BY created_at ASC').all();
         // Parse kembali string JSON ke bentuk objek/array
@@ -34,7 +34,7 @@ export function getHeldBills() {
 /**
  * [KB] Kembalikan antrian ke keranjang (Restore)
  */
-export function restoreBill(id) {
+function restoreBill(id) {
     try {
         const row = db.prepare('SELECT * FROM held_bills WHERE id = ?').get(id);
         if (!row) throw new Error('Held bill tidak ditemukan');
@@ -51,7 +51,7 @@ export function restoreBill(id) {
 /**
  * [KB] Buang antrian
  */
-export function discardHeldBill(id) {
+function discardHeldBill(id) {
     try {
         db.prepare('DELETE FROM held_bills WHERE id = ?').run(id);
         return { success: true };
@@ -64,7 +64,7 @@ export function discardHeldBill(id) {
 /**
  * [KB] Bersihkan semua antrian
  */
-export function clearAllHeldBills() {
+function clearAllHeldBills() {
     try {
         db.prepare('DELETE FROM held_bills').run();
         return { success: true };
@@ -73,3 +73,11 @@ export function clearAllHeldBills() {
         return { success: false, error: err.message };
     }
 }
+
+module.exports = {
+    holdBill,
+    getHeldBills,
+    restoreBill,
+    discardHeldBill,
+    clearAllHeldBills
+};

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Save, Store, MapPin, Phone, Zap, Tag } from 'lucide-react';
+import { Settings, Save, Store, MapPin, Phone, Zap, Tag, UploadCloud, RefreshCcw, Info } from 'lucide-react';
 
 export default function SettingsView({ 
   config, 
@@ -70,6 +70,46 @@ export default function SettingsView({
                     Sesuai PP 55/2022, durasi tarif 0.5% berbeda tiap tipe: <strong>OP (7 Thn)</strong>, <strong>CV (4 Thn)</strong>, <strong>PT (3 Thn)</strong>. 
                     Sistem akan melacak masa berlaku ini secara otomatis di menu Akuntansi.
                   </p>
+               </div>
+            </div>
+
+            {/* SPRINT 12: Cloud Sync Integration */}
+            <div className="p-6 md:p-8 space-y-6 bg-slate-50/50 border-t border-slate-100">
+               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                 <UploadCloud className="w-5 h-5 text-blue-500"/> Sinkronisasi Cloud (Mandiri Sync)
+               </h3>
+               <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                 Hubungkan database lokal Anda dengan server pusat untuk cadangan data otomatis dan sinkronisasi stok antar cabang.
+               </p>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button 
+                    type="button"
+                    onClick={() => window.api.syncCloud({ direction: 'push' }).then(() => alert('Push Data Berhasil!'))}
+                    className="flex items-center justify-center gap-3 p-4 bg-white border-2 border-blue-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                  >
+                     <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <UploadCloud className="w-5 h-5"/>
+                     </div>
+                     <div className="text-left">
+                        <p className="text-[10px] font-black text-blue-600 uppercase">Push ke Cloud</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Kirim data lokal ke server</p>
+                     </div>
+                  </button>
+
+                  <button 
+                    type="button"
+                    onClick={() => window.api.syncCloud({ direction: 'pull' }).then(() => alert('Pull Data Berhasil!'))}
+                    className="flex items-center justify-center gap-3 p-4 bg-white border-2 border-emerald-100 rounded-2xl hover:border-emerald-500 hover:bg-emerald-50 transition-all group"
+                  >
+                     <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <RefreshCcw className="w-5 h-5"/>
+                     </div>
+                     <div className="text-left">
+                        <p className="text-[10px] font-black text-emerald-600 uppercase">Pull dari Cloud</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Ambil update data terbaru</p>
+                     </div>
+                  </button>
                </div>
             </div>
 

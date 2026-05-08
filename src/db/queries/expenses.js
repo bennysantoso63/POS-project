@@ -1,10 +1,10 @@
-import db from '../db.js';
-import log from 'electron-log';
+const db = require('../db.js');
+const log = require('electron-log');
 
 /**
  * [KB] Mencatat Pengeluaran (Expense/Petty Cash) sesuai Blueprint Sprint 7
  */
-export function createExpense(data) {
+function createExpense(data) {
     try {
         const stmt = db.prepare(`
             INSERT INTO expenses (
@@ -33,7 +33,7 @@ export function createExpense(data) {
 /**
  * [KB] Mendapatkan seluruh riwayat pengeluaran
  */
-export function getAllExpenses(limit = 100) {
+function getAllExpenses(limit = 100) {
     try {
         return db.prepare('SELECT * FROM expenses ORDER BY created_at DESC LIMIT ?').all(limit);
     } catch (err) {
@@ -45,7 +45,7 @@ export function getAllExpenses(limit = 100) {
 /**
  * [KB] Query spesifik untuk laporan P&L / Tax (Sprint 7)
  */
-export function getExpensesByMonth(year, month) {
+function getExpensesByMonth(year, month) {
     try {
         const dateStr = `${year}-${String(month).padStart(2, '0')}%`;
         return db.prepare('SELECT * FROM expenses WHERE date LIKE ?').all(dateStr);
@@ -55,7 +55,7 @@ export function getExpensesByMonth(year, month) {
     }
 }
 
-export function getExpenseSummaryByCategory(year, month) {
+function getExpenseSummaryByCategory(year, month) {
     try {
         const dateStr = `${year}-${String(month).padStart(2, '0')}%`;
         return db.prepare(`
@@ -70,7 +70,7 @@ export function getExpenseSummaryByCategory(year, month) {
     }
 }
 
-export function getExpensesByCategory(category, year, month) {
+function getExpensesByCategory(category, year, month) {
     try {
         const dateStr = `${year}-${String(month).padStart(2, '0')}%`;
         return db.prepare('SELECT * FROM expenses WHERE category = ? AND date LIKE ?').all(category, dateStr);
@@ -80,7 +80,7 @@ export function getExpensesByCategory(category, year, month) {
     }
 }
 
-export function updateExpense(id, data) {
+function updateExpense(id, data) {
     try {
         const stmt = db.prepare(`
             UPDATE expenses 
@@ -95,7 +95,7 @@ export function updateExpense(id, data) {
     }
 }
 
-export function deleteExpense(id) {
+function deleteExpense(id) {
     try {
         db.prepare('DELETE FROM expenses WHERE id = ?').run(id);
         return { success: true };
@@ -104,3 +104,13 @@ export function deleteExpense(id) {
         return { success: false, error: err.message };
     }
 }
+
+module.exports = {
+    createExpense,
+    getAllExpenses,
+    getExpensesByMonth,
+    getExpenseSummaryByCategory,
+    getExpensesByCategory,
+    updateExpense,
+    deleteExpense
+};

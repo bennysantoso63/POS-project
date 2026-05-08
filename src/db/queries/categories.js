@@ -1,10 +1,10 @@
-import db from '../db.js';
-import log from 'electron-log';
+const db = require('../db.js');
+const log = require('electron-log');
 
 /**
  * [KB] Manajemen Kategori Produk
  */
-export function getAllCategories() {
+function getAllCategories() {
     try {
         return db.prepare('SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC').all();
     } catch (err) {
@@ -13,7 +13,7 @@ export function getAllCategories() {
     }
 }
 
-export function createCategory(name, sortOrder = 0) {
+function createCategory(name, sortOrder = 0) {
     try {
         const stmt = db.prepare('INSERT INTO categories (name, sort_order) VALUES (?, ?)');
         const result = stmt.run(name, sortOrder);
@@ -24,7 +24,7 @@ export function createCategory(name, sortOrder = 0) {
     }
 }
 
-export function updateCategory(id, data) {
+function updateCategory(id, data) {
     try {
         const stmt = db.prepare('UPDATE categories SET name = @name, sort_order = @sort_order WHERE id = @id');
         const result = stmt.run({ ...data, id });
@@ -35,7 +35,7 @@ export function updateCategory(id, data) {
     }
 }
 
-export function deleteCategory(id) {
+function deleteCategory(id) {
     try {
         const transaction = db.transaction(() => {
             // [INF] Pindahkan produk ke kategori 'Umum' sebelum menghapus kategori ini
@@ -53,7 +53,7 @@ export function deleteCategory(id) {
 /**
  * [KB] Filter Produk berdasarkan Kategori
  */
-export function getProductsByCategory(category) {
+function getProductsByCategory(category) {
     try {
         if (category === 'Semua') {
             return db.prepare('SELECT * FROM products ORDER BY name ASC').all();
@@ -64,3 +64,11 @@ export function getProductsByCategory(category) {
         return [];
     }
 }
+
+module.exports = {
+    getAllCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    getProductsByCategory
+};

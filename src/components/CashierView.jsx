@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
-  Search, Plus, Minus, Receipt, 
+  Search, Plus, Minus, Trash2, Receipt, 
   Banknote, CreditCard, Users, PauseCircle, Package, 
   Coffee, Utensils, XCircle, AlertCircle, Barcode,
-  ShoppingCart, Lock
+  ShoppingCart, Lock, Printer, Zap
 } from 'lucide-react';
 import { Modal } from './Modals';
 

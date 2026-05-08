@@ -1,10 +1,10 @@
-import db from '../db.js';
-import log from 'electron-log';
+const db = require('../db.js');
+const log = require('electron-log');
 
 /**
  * [KB] PURCHASE ORDERS & ACCOUNTS PAYABLE (AP)
  */
-export function createPurchaseOrder(data) {
+function createPurchaseOrder(data) {
     const insertPO = db.prepare(`
         INSERT INTO purchase_orders (supplier_id, supplier_name, order_date, due_date, notes)
         VALUES (@supplier_id, @supplier_name, @order_date, @due_date, @notes)
@@ -38,7 +38,7 @@ export function createPurchaseOrder(data) {
     }
 }
 
-export function receivePurchaseOrder(po_id) {
+function receivePurchaseOrder(po_id) {
     const updatePOStatus = db.prepare(`UPDATE purchase_orders SET status = 'received' WHERE id = ? AND status IN ('draft', 'ordered')`);
     const getItems = db.prepare(`SELECT * FROM purchase_order_items WHERE purchase_order_id = ? AND product_id IS NOT NULL`);
     const updateStock = db.prepare(`UPDATE products SET stock_pcs = stock_pcs + ?, cost_price = ? WHERE id = ?`);
@@ -65,7 +65,7 @@ export function receivePurchaseOrder(po_id) {
     }
 }
 
-export function recordPurchasePayment(po_id, paymentData, sessionId) {
+function recordPurchasePayment(po_id, paymentData, sessionId) {
     const insertPayment = db.prepare(`INSERT INTO purchase_payments (purchase_order_id, amount, payment_method, cashier_session_id, notes) VALUES (?, ?, ?, ?, ?)`);
     const updatePO = db.prepare(`UPDATE purchase_orders SET paid_amount = ?, status = ? WHERE id = ?`);
     
@@ -91,7 +91,7 @@ export function recordPurchasePayment(po_id, paymentData, sessionId) {
     }
 }
 
-export function voidPurchaseOrder(po_id, reason) {
+function voidPurchaseOrder(po_id, reason) {
     try {
         const po = db.prepare(`SELECT status FROM purchase_orders WHERE id = ?`).get(po_id);
         if (!po || po.status === 'paid') throw new Error("PO yang sudah lunas tidak bisa di-void.");
@@ -120,7 +120,7 @@ export function voidPurchaseOrder(po_id, reason) {
     }
 }
 
-export function getPurchaseOrderById(id) {
+function getPurchaseOrderById(id) {
     try {
         const po = db.prepare('SELECT * FROM purchase_orders WHERE id = ?').get(id);
         if (!po) return null;
@@ -133,7 +133,7 @@ export function getPurchaseOrderById(id) {
     }
 }
 
-export function getAllPurchaseOrders(filters = {}) {
+function getAllPurchaseOrders(filters = {}) {
     try {
         let query = 'SELECT * FROM purchase_orders WHERE 1=1';
         const params = [];
@@ -150,7 +150,7 @@ export function getAllPurchaseOrders(filters = {}) {
     }
 }
 
-export function getAPSummary() {
+function getAPSummary() {
     try {
         return db.prepare(`
             SELECT 
@@ -166,7 +166,7 @@ export function getAPSummary() {
     }
 }
 
-export function getSupplierStatement(supplier_id) {
+function getSupplierStatement(supplier_id) {
     try {
         const orders = db.prepare('SELECT * FROM purchase_orders WHERE supplier_id = ? ORDER BY order_date DESC').all(supplier_id);
         const summary = db.prepare(`
@@ -181,3 +181,14 @@ export function getSupplierStatement(supplier_id) {
         return { orders: [], total_hutang: 0 };
     }
 }
+
+module.exports = {
+    createPurchaseOrder,
+    receivePurchaseOrder,
+    recordPurchasePayment,
+    voidPurchaseOrder,
+    getPurchaseOrderById,
+    getAllPurchaseOrders,
+    getAPSummary,
+    getSupplierStatement
+};
