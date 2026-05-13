@@ -37,6 +37,12 @@ velora.key.pub
 *.db
 *.db-journal
 src/db/pos_offline.db
+pos_mandiri.db
+
+# Environment
+.env
+.env.*
+!.env.example
 
 # AI & Audit Artifacts (Safe Guard)
 audit_report.md
@@ -44,3 +50,11 @@ audit_report.md
 brain/
 scratch/
 !scratch/barcode-sistem/
+
+# Project Specific Ignored
+recovery_snapshot/
+graphify-out/
+.agents/
+apps/
+legacy_archive/
+packages/

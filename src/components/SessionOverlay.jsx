@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wifi, Server, Lock, Loader2 } from 'lucide-react';
+import { Wifi, Server, Lock, Loader2, AlertCircle, Receipt, Activity, CheckCircle2 } from 'lucide-react';
 
 export default function SessionOverlay({ 
   currentUser, 
@@ -10,10 +10,12 @@ export default function SessionOverlay({
   showCloseShiftModal, 
   onCloseShift,
   isLoading,
-  storeConfig
+  storeConfig,
+  isSembahyangMode
 }) {
   const [loginPin, setLoginPin] = useState('');
   const [shiftInputCash, setShiftInputCash] = useState('');
+  const [reconResult, setReconResult] = useState(null);
 
   const formatIDR = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
@@ -44,6 +46,25 @@ export default function SessionOverlay({
     );
   }
 
+  const handleBlindRecon = async (e) => {
+    e.preventDefault();
+    if (!shiftInputCash) return;
+    
+    const actual = parseInt(shiftInputCash.replace(/\D/g, '') || '0');
+    try {
+      const res = await window.api?.sembahyang.closeBlindSession(activeSession.id, actual);
+      setReconResult(res);
+    } catch (err) {
+      console.error("Gagal melakukan Blind Recon:", err);
+    }
+  };
+
+  const handleFinalClose = () => {
+    onCloseShift(shiftInputCash);
+    setShiftInputCash('');
+    setReconResult(null);
+  };
+
   return (
     <>
       {showOpenShiftModal && (
@@ -55,7 +76,18 @@ export default function SessionOverlay({
             <form onSubmit={(e) => { e.preventDefault(); onOpenShift(shiftInputCash); setShiftInputCash(''); }}>
               <div className="mb-6">
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Modal Tunai Awal (IDR)</label>
-                <input type="text" autoFocus required value={shiftInputCash} onChange={e => setShiftInputCash(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-4 text-2xl font-black text-slate-800 focus:outline-none focus:border-emerald-500" placeholder="0" />
+                <input 
+                   type="text" 
+                   autoFocus 
+                   required 
+                   value={shiftInputCash} 
+                   onChange={e => {
+                     const val = e.target.value.replace(/\D/g, '');
+                     setShiftInputCash(val ? parseInt(val).toLocaleString('id-ID') : '');
+                   }} 
+                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-4 text-2xl font-black text-slate-800 focus:outline-none focus:border-emerald-500" 
+                   placeholder="0" 
+                />
               </div>
               <button type="submit" className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-lg shadow-emerald-500/30 transition-all">BUKA KASIR SEKARANG</button>
             </form>
@@ -66,19 +98,84 @@ export default function SessionOverlay({
       {showCloseShiftModal && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-in zoom-in duration-200">
-            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6"><Lock className="w-8 h-8" /></div>
-            <h2 className="text-2xl font-black text-slate-800 mb-2">Tutup Shift & Laci</h2>
-            <p className="text-slate-500 text-sm mb-8">Hitung uang fisik di laci dan masukkan di bawah ini untuk audit.</p>
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
-              <div className="flex justify-between text-xs mb-1"><span>Ekspektasi Sistem:</span><span className="font-bold">{formatIDR(activeSession?.expected_cash || 0)}</span></div>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${reconResult ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+               {reconResult ? <CheckCircle2 className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); onCloseShift(shiftInputCash); setShiftInputCash(''); }}>
-              <div className="mb-6">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Uang Fisik di Laci (IDR)</label>
-                <input type="text" autoFocus required value={shiftInputCash} onChange={e => setShiftInputCash(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-4 text-2xl font-black text-slate-800 focus:outline-none focus:border-amber-500" placeholder="0" />
+            
+            <h2 className="text-2xl font-black text-slate-800 mb-2">Tutup Shift & Laci</h2>
+            <p className="text-slate-500 text-sm mb-8">
+              {isSembahyangMode && !reconResult 
+                ? "Blind Recon Aktif: Hitung fisik uang secara teliti tanpa melihat data sistem."
+                : "Hitung uang fisik di laci dan masukkan di bawah ini untuk audit."}
+            </p>
+
+            {(!isSembahyangMode || reconResult) && (
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-8 space-y-3">
+                <div className="flex justify-between text-xs text-slate-400 font-bold uppercase tracking-widest">
+                   <span>Ekspektasi Sistem</span>
+                   <span className="text-slate-800">{formatIDR(reconResult ? reconResult.expected : (activeSession?.expected_cash || 0))}</span>
+                </div>
+                {reconResult && (
+                  <>
+                    <div className="flex justify-between text-xs text-slate-400 font-bold uppercase tracking-widest">
+                       <span>Fisik Dilaporkan</span>
+                       <span className="text-slate-800">{formatIDR(reconResult.actual)}</span>
+                    </div>
+                    <div className={`flex justify-between text-xs font-black uppercase tracking-widest pt-3 border-t ${reconResult.difference === 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                       <span>Selisih (Gap)</span>
+                       <span>{reconResult.difference > 0 ? '+' : ''}{formatIDR(reconResult.difference)}</span>
+                    </div>
+                  </>
+                )}
               </div>
-              <button type="submit" className="w-full py-4 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-xl shadow-lg shadow-amber-500/30 transition-all">HITUNG & TUTUP SHIFT</button>
-            </form>
+            )}
+
+            {!reconResult ? (
+              <form onSubmit={isSembahyangMode ? handleBlindRecon : (e) => { e.preventDefault(); onCloseShift(shiftInputCash); setShiftInputCash(''); }}>
+                <div className="mb-8">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Uang Fisik di Laci (IDR)</label>
+                  <input 
+                    type="text" 
+                    autoFocus 
+                    required 
+                    value={shiftInputCash} 
+                    onChange={e => {
+                       const val = e.target.value.replace(/\D/g, '');
+                       setShiftInputCash(val ? parseInt(val).toLocaleString('id-ID') : '');
+                    }} 
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-6 py-5 text-4xl font-black text-slate-800 focus:outline-none focus:border-amber-500 tabular-nums" 
+                    placeholder="0" 
+                  />
+                  {isSembahyangMode && (
+                    <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-start gap-3">
+                       <AlertCircle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+                       <p className="text-[10px] font-bold text-orange-700 leading-relaxed">Sistem tidak akan menampilkan nominal tercatat sampai Anda mensubmit hitungan fisik.</p>
+                    </div>
+                  )}
+                </div>
+                <button type="submit" className="w-full py-5 bg-amber-600 hover:bg-amber-700 text-white font-black rounded-2xl shadow-xl shadow-amber-500/30 transition-all active:scale-95">
+                  {isSembahyangMode ? 'VERIFIKASI & COCOKKAN' : 'HITUNG & TUTUP SHIFT'}
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {!reconResult.isMatch && (
+                   <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-3 mb-6">
+                      <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                      <div>
+                         <p className="text-xs font-black text-rose-700 uppercase tracking-tight mb-1">Anomali Terdeteksi!</p>
+                         <p className="text-[10px] font-bold text-rose-600 leading-relaxed">Selisih uang akan dicatat secara permanen ke dalam Void Anomaly Log untuk audit pemilik.</p>
+                      </div>
+                   </div>
+                )}
+                <div className="flex gap-4">
+                   <button onClick={() => setReconResult(null)} className="flex-1 py-5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-2xl transition-all">HITUNG ULANG</button>
+                   <button onClick={handleFinalClose} className="flex-2 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-500/30 transition-all flex items-center justify-center gap-3">
+                      <Receipt size={20} /> KONFIRMASI TUTUP
+                   </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

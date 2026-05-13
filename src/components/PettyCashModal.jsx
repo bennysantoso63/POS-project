@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Wallet, X, AlertCircle, Save, ArrowDownCircle, ChevronRight } from 'lucide-react';
+import CustomDropdown from './ui/CustomDropdown';
 
 export default function PettyCashModal({ show, onSubmit, onClose }) {
   const [pcAmount, setPcAmount] = useState('');
@@ -8,13 +10,26 @@ export default function PettyCashModal({ show, onSubmit, onClose }) {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[500] flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col animate-in zoom-in-95">
-        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-3xl">
-          <h3 className="font-bold text-slate-800 text-lg">Pengeluaran Kasir (Kas Kecil)</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-red-500">×</button>
+    <div className="fixed inset-0 bg-brand-bg/80 backdrop-blur-md z-[500] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-brand-card rounded-[2.5rem] w-full max-w-lg shadow-[0_0_50px_rgba(0,0,0,0.1)] border border-brand-border flex flex-col animate-in zoom-in-95 duration-300">
+        
+        {/* HEADER */}
+        <div className="px-8 py-6 border-b border-brand-border flex justify-between items-center bg-brand-bg/30 rounded-t-[2.5rem]">
+          <div className="flex items-center gap-4">
+             <div className="w-10 h-10 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center">
+                <ArrowDownCircle className="w-6 h-6" />
+             </div>
+             <div>
+                <h3 className="font-bold text-brand-text tracking-tight text-lg">Kas Keluar</h3>
+                <p className="text-[9px] font-bold text-brand-muted tracking-widest mt-0.5">Petty Cash Management</p>
+             </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-brand-bg rounded-xl text-brand-muted hover:text-rose-500 transition-colors">
+            <X size={20} />
+          </button>
         </div>
-        <div className="p-6">
+
+        <div className="p-8">
           <form onSubmit={(e) => { 
             e.preventDefault(); 
             const amount = parseInt(pcAmount.replace(/\D/g,'') || '0', 10);
@@ -23,26 +38,64 @@ export default function PettyCashModal({ show, onSubmit, onClose }) {
             setPcDesc('');
             setPcCategory('OPEX');
           }}>
-            <p className="text-sm text-slate-500 mb-4">Catat pengeluaran uang laci. Uang laci sistem akan otomatis dikurangi agar tidak selisih saat EOD.</p>
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Nominal Kas Keluar (Rp) *</label>
-                <input autoFocus required type="text" value={pcAmount} onChange={(e) => setPcAmount(e.target.value.replace(/\D/g, '') ? parseInt(e.target.value.replace(/\D/g, '')).toLocaleString('id-ID') : '')} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl py-3 px-4 text-right font-black text-slate-800 focus:border-blue-500 outline-none transition-all shadow-inner" placeholder="0" />
+            <div className="flex items-start gap-4 p-4 bg-brand-bg rounded-2xl border border-brand-border mb-8">
+               <AlertCircle className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
+               <p className="text-[10px] font-bold text-brand-muted leading-relaxed tracking-widest">
+                 Catat pengeluaran uang laci. Saldo sistem akan otomatis dikurangi untuk menghindari selisih saat eod.
+               </p>
+            </div>
+
+            <div className="space-y-6 mb-10">
+              <div className="group">
+                <label className="block text-[10px] font-bold text-brand-muted tracking-widest mb-2 ml-1 group-focus-within:text-brand-primary transition-colors">Nominal Keluar (IDR) *</label>
+                <div className="relative">
+                   <input 
+                     autoFocus 
+                     required 
+                     type="text" 
+                     value={pcAmount} 
+                     onChange={(e) => setPcAmount(e.target.value.replace(/\D/g, '') ? parseInt(e.target.value.replace(/\D/g, '')).toLocaleString('id-ID') : '')} 
+                     className="w-full bg-brand-bg border border-brand-border rounded-2xl py-5 px-6 text-right font-black text-brand-text text-xl focus:border-brand-primary outline-none transition-all shadow-inner placeholder:opacity-20" 
+                     placeholder="0" 
+                   />
+                   <span className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-muted font-bold text-sm opacity-40">Rp</span>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Kategori Pajak (Penting!) *</label>
-                <select value={pcCategory} onChange={e=>setPcCategory(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-800 focus:border-blue-500 outline-none transition-all cursor-pointer shadow-sm">
-                   <option value="OPEX">Biaya Operasional Toko (Gaji, Listrik, dll)</option>
-                   <option value="PRIVE">Prive (Ambil Keuntungan Pribadi)</option>
-                   <option value="NON_DEDUCTIBLE">Sumbangan / Biaya Lain (Non-Deductible)</option>
-                </select>
+
+              <div className="relative z-50">
+                <label className="block text-[10px] font-bold text-brand-muted tracking-widest mb-2 ml-1">Kategori Alokasi *</label>
+                <CustomDropdown 
+                  value={pcCategory} 
+                  onChange={setPcCategory} 
+                  options={[
+                    { value: 'OPEX', label: 'Operasional (Gaji, Listrik, Sampah)' },
+                    { value: 'PRIVE', label: 'Prive (Keuntungan Pribadi)' },
+                    { value: 'NON_DEDUCTIBLE', label: 'Lainnya (Sumbangan / Non-Pajak)' }
+                  ]} 
+                  label="Pilih Alokasi"
+                  icon={<ChevronRight className="w-4 h-4" />}
+                />
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Keterangan / Tujuan *</label>
-                <input required type="text" value={pcDesc} onChange={(e) => setPcDesc(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-800 focus:border-blue-500 outline-none transition-all shadow-inner" placeholder="Cth: Bayar uang sampah" />
+                <label className="block text-[10px] font-bold text-brand-muted tracking-widest mb-2 ml-1">Keterangan / Tujuan *</label>
+                <input 
+                  required 
+                  type="text" 
+                  value={pcDesc} 
+                  onChange={(e) => setPcDesc(e.target.value)} 
+                  className="w-full bg-brand-bg border border-brand-border rounded-2xl py-4 px-6 text-xs font-bold text-brand-text focus:border-brand-primary outline-none transition-all shadow-inner placeholder:text-brand-muted/30" 
+                  placeholder="Cth: Bayar tagihan internet" 
+                />
               </div>
             </div>
-            <button type="submit" className="w-full py-4 bg-slate-800 text-white font-black text-lg rounded-xl hover:bg-slate-900 shadow-md transition-transform active:scale-95">CATAT PENGELUARAN</button>
+
+            <button 
+              type="submit" 
+              className="w-full py-5 bg-brand-primary text-white font-bold text-xs rounded-2xl hover:bg-brand-secondary shadow-xl shadow-brand-primary/30 transition-all active:scale-95 tracking-widest flex items-center justify-center gap-3"
+            >
+              <Save size={16} /> Simpan Pencatatan
+            </button>
           </form>
         </div>
       </div>

@@ -14,7 +14,7 @@ import {
   BrainCircuit, TrendingUp, AlertTriangle, Target, Lightbulb, PackageX, Activity
 } from 'lucide-react';
 
-const formatRp = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
+import { formatRp } from '../utils/formatters';
 
 export default function LocalIntelligenceDashboard({ transactions, products, settings }) {
 

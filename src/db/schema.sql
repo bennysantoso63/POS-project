@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     pin_hash TEXT NOT NULL, -- Bcrypt Hash
-    role TEXT NOT NULL CHECK(role IN ('admin', 'manager', 'cashier', 'auditor')),
+    role TEXT NOT NULL CHECK(role IN ('owner', 'admin', 'manager', 'cashier', 'auditor')),
     is_active INTEGER NOT NULL DEFAULT 1,
     created_at DATETIME DEFAULT (datetime('now', 'localtime'))
 );
@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS transaction_items (
     multiplier INTEGER DEFAULT 1,
     unit_type TEXT DEFAULT 'pcs',
     unit_price INTEGER NOT NULL,
+    name TEXT, -- Nama produk saat transaksi
     cost_price INTEGER DEFAULT 0 -- Menyimpan HPP saat transaksi (HPP Ritel atau HPP BOM)
 );
 
@@ -217,3 +218,27 @@ CREATE TABLE IF NOT EXISTS remote_store_logs (
     payload TEXT NOT NULL,
     pulled_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS held_bills (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    label TEXT NOT NULL,
+    cart_data TEXT NOT NULL,
+    created_at DATETIME DEFAULT (datetime('now', 'localtime'))
+);
+
+-- 10. SEMBAHYANG INTELLIGENCE (LUNAR & RAG)
+CREATE TABLE IF NOT EXISTS Dim_Date_Lunar (
+    date_id TEXT PRIMARY KEY, -- Format: YYYY-MM-DD
+    gregorian_date TEXT NOT NULL,
+    lunar_date TEXT NOT NULL,
+    ritual_name TEXT,
+    intensity_score INTEGER NOT NULL DEFAULT 1 -- Skala 1-10
+);
+
+CREATE TABLE IF NOT EXISTS Knowledge_Vectors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_name TEXT NOT NULL,
+    chunk_text TEXT NOT NULL,
+    embedding_json TEXT NOT NULL
+);
+

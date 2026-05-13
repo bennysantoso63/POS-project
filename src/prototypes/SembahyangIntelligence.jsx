@@ -16,7 +16,7 @@ import {
   Send, UserCheck, Flame, Moon, Lock, User, ShieldAlert
 } from 'lucide-react';
 
-const formatRp = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
+import { formatRp } from '../utils/formatters';
 
 // ==========================================
 // 1. ZERO-API LOCAL NLP ENGINE (LING-LING CHAT)
@@ -125,10 +125,10 @@ export default function SembahyangIntelligence({ db, isAdmin = true }) {
       const txs = db.transactions.filter(t => t.customerId === c.id);
       const totalSpent = txs.reduce((sum, t) => sum + (t.total || 0), 0);
       
-      let badge = '❄️ Umat Pasif';
-      let color = 'text-slate-400 bg-slate-100';
+      let badge = '❄️ Pelanggan Pasif';
+      let color = 'text-slate-500 bg-slate-100 border-slate-300';
       if (totalSpent > 1000000) { badge = '👑 Donatur Emas'; color = 'text-amber-700 bg-amber-100 border-amber-300'; }
-      else if (totalSpent > 200000) { badge = '🔥 Umat Aktif'; color = 'text-emerald-700 bg-emerald-100 border-emerald-300'; }
+      else if (totalSpent > 200000) { badge = '🔥 Pelanggan Aktif'; color = 'text-emerald-700 bg-emerald-100 border-emerald-300'; }
 
       return { ...c, totalSpent, txCount: txs.length, badge, color };
     }).sort((a,b) => b.totalSpent - a.totalSpent);
@@ -189,14 +189,14 @@ export default function SembahyangIntelligence({ db, isAdmin = true }) {
           {/* WIDGET: RFM MATRIX */}
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] shadow-xl">
              <h3 className="text-sm font-black uppercase tracking-widest text-emerald-400 mb-4 flex items-center gap-2">
-                <UserCheck className="w-4 h-4"/> Matriks RFM Umat
+                <UserCheck className="w-4 h-4"/> Matriks RFM Pelanggan
              </h3>
              {rfmSegments.length > 0 ? (
                <div className="overflow-x-auto">
                  <table className="w-full text-left text-sm">
                    <thead>
                      <tr className="border-b border-slate-800 text-slate-500 text-[10px] uppercase tracking-widest">
-                       <th className="pb-3">Nama Umat / Vihara</th>
+                       <th className="pb-3">Nama Pelanggan / Institusi</th>
                        <th className="pb-3">Total Belanja</th>
                        <th className="pb-3">Segmen AI</th>
                      </tr>

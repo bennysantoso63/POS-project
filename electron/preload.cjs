@@ -1,87 +1,70 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-/**
- * POS MANDIRI ENTERPRISE - CONSOLIDATED IPC BRIDGE
- * Optimized for Security and Professional Deployment
- */
 contextBridge.exposeInMainWorld('api', {
-    // 1. AUTH & USER MANAGEMENT
+    // AUTH & SETUP
     checkSetup: () => ipcRenderer.invoke('api-check-setup'),
     setupAdmin: (data) => ipcRenderer.invoke('api-setup-admin', data),
     login: (pin) => ipcRenderer.invoke('api-login', pin),
+    logout: () => ipcRenderer.invoke('api-logout'),
     getUsers: () => ipcRenderer.invoke('api-get-users'),
-    createUser: (data) => ipcRenderer.invoke('api-create-user', data),
-    updateUser: (id, data) => ipcRenderer.invoke('api-update-user', id, data),
-    deleteUser: (id) => ipcRenderer.invoke('api-delete-user', id),
-    getAuditLogs: () => ipcRenderer.invoke('api-get-audit-logs'),
 
-    // 2. MASTER DATA
+    // MASTER DATA (Standardized)
     getProducts: () => ipcRenderer.invoke('api-get-products'),
-    getCategories: () => ipcRenderer.invoke('api-get-categories'),
     addProduct: (data) => ipcRenderer.invoke('api-add-product', data),
-    updateProduct: (id, data) => ipcRenderer.invoke('api-update-product', id, data),
+    updateProduct: (id, data, userId) => ipcRenderer.invoke('api-update-product', id, data, userId),
     deleteProduct: (id) => ipcRenderer.invoke('api-delete-product', id),
+    getCategories: () => ipcRenderer.invoke('api-get-categories'),
+    getCustomers: () => ipcRenderer.invoke('api-get-customers'),
+    addCustomer: (data) => ipcRenderer.invoke('api-add-customer', data),
+    getSuppliers: () => ipcRenderer.invoke('api-get-suppliers'),
 
-    // 3. SHIFT & SESSION MANAGEMENT
-    getActiveSession: () => ipcRenderer.invoke('api-get-active-session'),
-    openSession: (openingCash) => ipcRenderer.invoke('api-open-session', openingCash),
-    closeSession: (data) => ipcRenderer.invoke('api-close-session', data),
-    getSessions: () => ipcRenderer.invoke('api-get-sessions'),
-
-    // 4. KASIR & TRANSAKSI
-    processCheckout: (txData) => ipcRenderer.invoke('api-process-checkout', txData),
-    voidTransaction: (txId) => ipcRenderer.invoke('api-void-transaction', txId),
+    // TRANSAKSI & HISTORY
+    processCheckout: (data) => ipcRenderer.invoke('api-process-checkout', data),
     getTransactions: (filters) => ipcRenderer.invoke('api-get-transactions', filters),
-    
-    // Hold Bills (Draft / Table Management)
+    voidTransaction: (id, sid) => ipcRenderer.invoke('api-void-transaction', id, sid),
     holdBill: (data) => ipcRenderer.invoke('api-hold-bill', data),
     getHeldBills: () => ipcRenderer.invoke('api-get-held-bills'),
     restoreBill: (id) => ipcRenderer.invoke('api-restore-bill', id),
-    discardHeldBill: (id) => ipcRenderer.invoke('api-discard-held-bill', id),
+    deleteHeldBill: (id) => ipcRenderer.invoke('api-delete-held-bill', id),
 
-    // 5. ACCOUNTS RECEIVABLE (CRM)
-    getCustomers: () => ipcRenderer.invoke('api-get-customers'),
-    addCustomer: (data) => ipcRenderer.invoke('api-add-customer', data),
-    createReceivable: (data) => ipcRenderer.invoke('api-create-receivable', data),
-    recordPayment: (data) => ipcRenderer.invoke('api-record-payment', data),
+    // SESSIONS
+    getActiveSession: () => ipcRenderer.invoke('api-get-active-session'),
+    openSession: (cash) => ipcRenderer.invoke('api-open-session', cash),
+    closeSession: (data) => ipcRenderer.invoke('api-close-session', data),
+    getSessions: () => ipcRenderer.invoke('api-get-sessions'),
 
-    // 6. ACCOUNTS PAYABLE (Hutang)
-    getSuppliers: () => ipcRenderer.invoke('api-get-suppliers'),
-    createSupplier: (data) => ipcRenderer.invoke('api-create-supplier', data),
-    getPurchaseOrders: () => ipcRenderer.invoke('api-get-purchase-orders'),
-    createPurchaseOrder: (data) => ipcRenderer.invoke('api-create-po', data),
-    receivePurchaseOrder: (id) => ipcRenderer.invoke('api-receive-po', id),
-    payPurchaseOrder: (id, data) => ipcRenderer.invoke('api-pay-po', id, data),
+    // INTELLIGENCE (Namespace Unified)
+    intelligence: {
+      getRFM: () => ipcRenderer.invoke('api-intelligence-rfm'),
+      getApriori: () => ipcRenderer.invoke('api-intelligence-apriori'),
+      getBurnRate: () => ipcRenderer.invoke('api-intelligence-burnrate'),
+      getBigBang: () => ipcRenderer.invoke('api-intelligence-bigbang'),
+      chat: (q) => ipcRenderer.invoke('api-intelligence-chat', q),
+      recalculate: () => ipcRenderer.invoke('api-intelligence-recalculate')
+    },
 
-    // 7. F&B ENGINE (BOM & KDS)
-    getKdsOrders: () => ipcRenderer.invoke('api-get-kds-orders'),
-    updateKdsStatus: (id, status) => ipcRenderer.invoke('api-update-kds-status', id, status),
-    getIngredients: () => ipcRenderer.invoke('api-get-ingredients'),
-    recordSpoilage: (data) => ipcRenderer.invoke('api-record-spoilage', data),
-    getSpoilages: () => ipcRenderer.invoke('api-get-spoilages'),
-    getRecipe: (productId) => ipcRenderer.invoke('api-get-recipe', productId),
-    saveRecipe: (productId, items) => ipcRenderer.invoke('api-save-recipe', productId, items),
+    // SEMBAHYANG & DS ENGINE
+    sembahyang: {
+      getBundlingSuggestion: (itemId) => ipcRenderer.invoke('sembahyang:getBundlingSuggestion', itemId),
+      closeBlindSession: (sessionId, inputCash) => ipcRenderer.invoke('sembahyang:closeBlindSession', sessionId, inputCash)
+    },
+    
+    ds: {
+      getRecommendations: (barcodes) => ipcRenderer.invoke('ds:get-recommendations', barcodes),
+      getBurnRate: (barcode) => ipcRenderer.invoke('ds:get-burn-rate', barcode)
+    },
 
-    // 8. SETTINGS & HARDWARE
+    // SYNC & EXCEL
+    sync: {
+      googleLogin: () => ipcRenderer.invoke('sync:googleLogin'),
+      dryRunExcel: (filePath) => ipcRenderer.invoke('sync:dryRunExcel', filePath),
+      commitExcel: (data, platform) => ipcRenderer.invoke('sync:commitExcel', data, platform)
+    },
+
+    // SETTINGS & HARDWARE
     getSettings: () => ipcRenderer.invoke('api-get-settings'),
-    saveSettings: (settings) => ipcRenderer.invoke('api-save-settings', settings),
+    saveSettings: (data) => ipcRenderer.invoke('api-save-settings', data),
     printReceipt: (data) => ipcRenderer.invoke('api-print-receipt', data),
     
-    // Inventory
-    adjustStock: (adjustments) => ipcRenderer.invoke('api-adjust-stock', adjustments),
-    getStockMovements: () => ipcRenderer.invoke('api-get-stock-movements'),
-    
-    // Expenses
-    createExpense: (data) => ipcRenderer.invoke('api-create-expense', data),
-    getExpenses: () => ipcRenderer.invoke('api-get-expenses'),
-
-    // Cloud Sync
-    syncCloud: (options) => ipcRenderer.invoke('api-sync-cloud', options),
-
-    // Sprint 13 - Sembahyang Intelligence
-    getSembahyangRFM: () => ipcRenderer.invoke('api-sembahyang-rfm'),
-    getSembahyangBurnRate: () => ipcRenderer.invoke('api-sembahyang-burnrate'),
-    getSembahyangApriori: () => ipcRenderer.invoke('api-sembahyang-apriori'),
-    askLingLing: (question) => ipcRenderer.invoke('api-sembahyang-chat', question)
+    quitApp: () => ipcRenderer.send('quit-app')
 });
-

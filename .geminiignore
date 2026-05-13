@@ -1,0 +1,10 @@
+# Ling-Ling POS structural Guardrails
+# Ignore stable business logic to prevent accidental regression
+
+src/db/queries/
+electron/LingLingRAG.js
+node_modules/
+dist/
+.git/
+graphify-out/
+recovery_snapshot/

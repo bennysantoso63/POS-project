@@ -11,29 +11,31 @@ export function useSembahyang() {
     const [rfmData, setRfmData] = useState([]);
     const [aprioriRules, setAprioriRules] = useState([]);
     const [burnRate, setBurnRate] = useState([]);
+    const [bigBangData, setBigBangData] = useState([]);
     const [loading, setLoading] = useState(false);
 
     // Refresh semua data intelijen dari SQLite
     const refreshIntelligence = useCallback(async () => {
-        if (!window.api || !window.api.getSembahyangRFM) {
+        if (!window.api || !window.api.intelligence) {
             console.warn("[Hook] API Intelligence belum terdaftar di preload.cjs");
             return;
         }
         
         setLoading(true);
         try {
-            // Memanggil 3 query analitik secara paralel untuk efisiensi
-            const [rfm, apriori, burn] = await Promise.all([
-                window.api.getSembahyangRFM(),
-                window.api.getSembahyangApriori(),
-                window.api.getSembahyangBurnRate()
+            const [rfm, apriori, burn, bigbang] = await Promise.all([
+                window.api.intelligence.getRFM(),
+                window.api.intelligence.getApriori(),
+                window.api.intelligence.getBurnRate(),
+                window.api.intelligence.getBigBang()
             ]);
             
             setRfmData(rfm || []);
             setAprioriRules(apriori || []);
             setBurnRate(burn || []);
+            setBigBangData(bigbang || []);
         } catch (error) {
-            console.error("[Hook Error] Gagal memuat data sembahyang:", error);
+            console.error("[Hook Error] Gagal memuat data intelligence:", error);
         } finally {
             setLoading(false);
         }
@@ -41,12 +43,12 @@ export function useSembahyang() {
 
     // Tanya asisten Ling-Ling (NLP Interface)
     const askLingLing = async (question) => {
-        if (!window.api?.askLingLing) return "Sistem AI tidak terdeteksi (Preload Bridge missing).";
+        if (!window.api?.intelligence?.chat) return "Sistem AI tidak terdeteksi (Preload Bridge missing).";
         try {
-            return await window.api.askLingLing(question);
+            return await window.api.intelligence.chat(question);
         } catch (e) {
             console.error("[Chat Error]", e);
-            return "Maaf Bos, Ling-Ling sedang pusing (Database Error).";
+            return "Maaf, sistem sedang mengalami kendala teknis saat ini.";
         }
     };
 
@@ -59,6 +61,7 @@ export function useSembahyang() {
         rfmData,
         aprioriRules,
         burnRate,
+        bigBangData,
         loading,
         refreshIntelligence,
         askLingLing

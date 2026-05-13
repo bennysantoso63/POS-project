@@ -8,7 +8,7 @@ import {
   UserCheck
 } from 'lucide-react';
 
-const formatRp = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
+import { formatRp } from '../utils/formatters';
 
 /**
  * [MASTER BLUEPRINT] POS MANDIRI ENTERPRISE - MEGA INTEGRATION
@@ -253,13 +253,13 @@ const IntelligenceDashboard = ({ db, rfmSegments, aprioriRules, burnRateAlerts }
           {/* RFM Matrix Widget */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none transition-colors">
              <h3 className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500 mb-6 flex items-center gap-2">
-                <UserCheck className="w-5 h-5"/> Matriks RFM Umat
+                <UserCheck className="w-5 h-5"/> Matriks RFM Pelanggan
              </h3>
              <div className="overflow-x-auto">
                <table className="w-full text-left text-sm">
                  <thead>
                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-widest">
-                     <th className="pb-4">Nama Umat / Vihara</th>
+                     <th className="pb-4">Nama Pelanggan / Institusi</th>
                      <th className="pb-4">Total Belanja</th>
                      <th className="pb-4">Segmen AI</th>
                    </tr>
@@ -374,9 +374,9 @@ export default function App() {
     const rfm = dbContext.customers.map(c => {
       const txs = dbContext.transactions.filter(t => t.customerId === c.id);
       const totalSpent = txs.reduce((sum, t) => sum + t.total, 0);
-      let badge = '❄️ Umat Pasif', color = 'text-slate-500 bg-slate-100 border-slate-300 dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700';
+      let badge = '❄️ Pelanggan Pasif', color = 'text-slate-500 bg-slate-100 border-slate-300 dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700';
       if (totalSpent > 1000000) { badge = '👑 Donatur Emas'; color = 'text-amber-700 bg-amber-100 border-amber-300 dark:text-amber-500 dark:bg-amber-900/30 dark:border-amber-700/50'; }
-      else if (totalSpent > 200000) { badge = '🔥 Umat Aktif'; color = 'text-emerald-700 bg-emerald-100 border-emerald-300 dark:text-emerald-500 dark:bg-emerald-900/30 dark:border-emerald-700/50'; }
+      else if (totalSpent > 200000) { badge = '🔥 Pelanggan Aktif'; color = 'text-emerald-700 bg-emerald-100 border-emerald-300 dark:text-emerald-500 dark:bg-emerald-900/30 dark:border-emerald-700/50'; }
       return { ...c, totalSpent, badge, color };
     }).sort((a,b) => b.totalSpent - a.totalSpent);
 

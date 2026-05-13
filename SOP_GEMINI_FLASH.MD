@@ -11,6 +11,20 @@
 
 ---
 
+## 🛡️ PROTOKOL PERLINDUNGAN INFRASTRUKTUR (CRITICAL UPDATE)
+**DILARANG KERAS** menghapus, memodifikasi, atau menimpa file-file "Mandiri Enterprise" berikut kecuali ada instruksi eksplisit:
+1. `electron/main_enterprise.js` (Engine POS Mandiri)
+2. `electron/LingLingRAG.js` (Knowledge Engine)
+3. `electron/LingLingDataScience.js` (Analitik & Burn-Rate)
+4. `src/components/SelfServiceView.jsx` (Terminal Kasir Mandiri)
+5. `src/components/EnterpriseDashboardView.jsx` (Pusat Komando)
+6. `docs/schema_mandiri.sql`
+
+*Jika Anda ditugaskan untuk memodifikasi backend (`main.js`), pastikan Anda mengintegrasikannya dengan hati-hati tanpa merusak IPC `print-receipt` atau algoritma AI di atas.*
+
+
+---
+
 ## BAGIAN 0: ORIENTASI CEPAT (TOKEN-EFFICIENT SUMMARY)
 
 ### 0.1 Apa yang Sudah Selesai (JANGAN ULANGI)
@@ -59,7 +73,7 @@ barcode-sistem/
     └── prototypes/              ← READ-ONLY. Sumber kode. Jangan edit.
 ```
 
-### 0.4 File DILARANG DISENTUH (Blacklist)
+### 0.4 File DILARANG DISENTUH (Blacklist / Protected)
 
 ```
 CashierView.jsx | DashboardView.jsx | AccountingView.jsx
@@ -67,6 +81,10 @@ SessionOverlay.jsx | Modals.jsx | AdditionalModals.jsx
 BarcodeScanner.jsx | CycleCountView.jsx | MonitorView.jsx
 SettingsView.jsx | CrmView.jsx | PettyCashModal.jsx
 usePosData.js | useSessionStore.js | main.jsx
+
+[INFRASTRUKTUR ENTERPRISE TERLINDUNGI]
+SelfServiceView.jsx | EnterpriseDashboardView.jsx
+main_enterprise.js | LingLingRAG.js | LingLingDataScience.js | schema_mandiri.sql
 ```
 
 ---
@@ -447,23 +465,23 @@ import LingLingChat from "./components/LingLingChat";
 ## RINGKASAN EKSEKUSI (COPY-PASTE CHECKLIST)
 
 ```
-[ ] SESI A:
-    [ ] 2.2: Replace PurchasingView.jsx (fix export name + dark mode tokens)
-    [ ] 2.2: CHECKPOINT — npm run dev, buka tab Supplier
-    [ ] 2.3: Replace RelationsView.jsx (fix 4 prop mismatches + RFM badge)
-    [ ] 2.3: CHECKPOINT — npm run dev, buka tab Piutang
+[x] SESI A:
+    [x] 2.2: Replace PurchasingView.jsx (fix export name + dark mode tokens)
+    [x] 2.2: CHECKPOINT — npm run dev, buka tab Supplier
+    [x] 2.3: Replace RelationsView.jsx (fix 4 prop mismatches + RFM badge)
+    [x] 2.3: CHECKPOINT — npm run dev, buka tab Piutang
 
-[ ] SESI B:
-    [ ] 3.1: Buat electron/queries/sembahyang_ai.js
-    [ ] 3.2: Update electron/main.js (import + register)
-    [ ] 3.3: Update electron/preload.cjs (4 API baru)
-    [ ] 3.4: Buat src/components/LingLingChat.jsx
-    [ ] CHECKPOINT — npm run dev, test chat AI
+[x] SESI B:
+    [x] 3.1: Buat electron/queries/sembahyang_ai.js
+    [x] 3.2: Update electron/main.js (import + register)
+    [x] 3.3: Update electron/preload.cjs (4 API baru)
+    [x] 3.4: Buat src/components/LingLingChat.jsx
+    [x] CHECKPOINT — npm run dev, test chat AI
 
-[ ] SESI C:
-    [ ] 4.1: Update App.jsx (useEffect dark mode + route intelligence)
-    [ ] 4.2: Replace IntelligenceView.jsx
-    [ ] CHECKPOINT — toggle dark mode, buka tab Dharma AI
+[x] SESI C:
+    [x] 4.1: Update App.jsx (useEffect dark mode + route intelligence)
+    [x] 4.2: Replace IntelligenceView.jsx
+    [x] CHECKPOINT — toggle dark mode, buka tab Dharma AI
 
 [ ] SESI D:
     [ ] Full regression test 8 fitur lama

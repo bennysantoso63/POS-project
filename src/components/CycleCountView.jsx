@@ -1,20 +1,27 @@
 import React, { useState, useCallback } from 'react';
-import { Scan, Barcode, Minus, Plus, CheckCircle2, ClipboardCheck, Calendar } from 'lucide-react';
+import { 
+  Scan, Barcode, Minus, Plus, 
+  CheckCircle2, ClipboardCheck, Calendar,
+  AlertTriangle, ArrowRight, X, Layers,
+  ChevronRight, RefreshCcw, History,
+  ShieldCheck, Database, Boxes, Timer,
+  Search, ArrowUpRight, ArrowDownRight, Activity
+} from 'lucide-react';
 import BarcodeScanner from './BarcodeScanner';
 import toast from 'react-hot-toast';
 
 export default function CycleCountView({ products, onApplyAdjustments, cycleCountHistory = [], preSelected = null }) {
-  const [ccItems, setCcItems] = useState(preSelected ? preSelected.map(p => ({ ...p, physicalStock: '' })) : []);
-  const [isCounting, setIsCounting] = useState(!!preSelected);
+  const [ccItems, setCcItems] = useState(Array.isArray(preSelected) ? preSelected.map(p => ({ ...p, physicalStock: '' })) : []);
+  const [isCounting, setIsCounting] = useState(Array.isArray(preSelected) && preSelected.length > 0);
   const [showScanner, setShowScanner] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [adjustments, setAdjustments] = useState([]);
 
   // Reset if preSelected changes (e.g. user triggers another random opname)
   React.useEffect(() => {
-    if (preSelected) {
+    if (Array.isArray(preSelected)) {
       setCcItems(preSelected.map(p => ({ ...p, physicalStock: '' })));
-      setIsCounting(true);
+      setIsCounting(preSelected.length > 0);
       setShowSummary(false);
     }
   }, [preSelected]);
@@ -56,48 +63,85 @@ export default function CycleCountView({ products, onApplyAdjustments, cycleCoun
         }
         return item;
       }));
-      toast.success(`[Scanner] Fisik ${ccItems[prodIndex].name} +1`);
+      toast.success(`[Scanner] Ditemukan: ${ccItems[prodIndex].name} (+1)`, {
+        style: {
+          background: 'rgba(var(--brand-primary-rgb), 0.1)',
+          color: 'var(--brand-primary)',
+          border: '1px solid rgba(var(--brand-primary-rgb), 0.2)',
+          fontSize: '10px',
+          fontWeight: '700',
+          letterSpacing: '0.05em'
+        }
+      });
     } else {
-      toast.error(`SKU ${sku} tidak ada dalam daftar opname ini!`);
+      toast.error(`SKU ${sku} tidak ada dalam daftar opname saat ini!`, {
+        style: {
+          background: 'rgba(239, 68, 68, 0.1)',
+          color: '#ef4444',
+          border: '1px solid rgba(239, 68, 68, 0.2)',
+          fontSize: '10px',
+          fontWeight: '700',
+          letterSpacing: '0.05em'
+        }
+      });
     }
   }, [ccItems]);
 
   if (showSummary) {
     return (
-      <div className="p-4 md:p-8 h-full bg-slate-50 overflow-y-auto">
-        <div className="max-w-2xl mx-auto bg-white rounded-[2rem] shadow-xl border border-slate-100 p-6 md:p-8 animate-in zoom-in-95">
-           <h3 className="text-2xl font-black text-slate-800 mb-2">Ringkasan Selisih Stok</h3>
-           <p className="text-sm text-slate-500 mb-6">Harap tinjau kembali hasil hitung fisik sebelum disimpan ke database.</p>
+      <div className="flex-1 p-8 md:p-16 bg-brand-bg text-brand-text font-sans h-full overflow-y-auto custom-scrollbar transition-colors relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-accent/5 pointer-events-none"></div>
+        
+        <div className="max-w-4xl mx-auto bg-brand-card rounded-[4rem] shadow-2xl border border-brand-border p-12 lg:p-20 animate-in zoom-in-95 duration-500 relative z-10">
+           <div className="flex items-center gap-8 mb-16 border-b border-brand-border pb-12">
+              <div className="w-20 h-20 bg-brand-primary/10 text-brand-primary rounded-[2rem] flex items-center justify-center shadow-inner relative group">
+                 <div className="absolute inset-0 bg-brand-primary/20 rounded-[2rem] animate-ping opacity-20"></div>
+                 <ClipboardCheck className="w-10 h-10 relative z-10" />
+              </div>
+              <div>
+                <h3 className="text-4xl font-black tracking-tighter leading-none mb-3">Selisih <span className="text-brand-primary">Stok</span></h3>
+                <p className="text-[10px] font-bold text-brand-muted tracking-wider">Periksa kembali selisih stok sebelum disimpan ke database</p>
+              </div>
+           </div>
 
-           <div className="space-y-3 mb-8">
-              {adjustments.map(adj => (
-                 <div key={adj.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div>
-                       <p className="font-bold text-sm text-slate-800">{adj.name}</p>
-                       <p className="text-[10px] font-mono text-slate-500">{adj.sku}</p>
+           <div className="space-y-6 mb-16 max-h-[45vh] overflow-y-auto pr-6 custom-scrollbar">
+              {adjustments.map(adj => {
+                 const hasDiff = adj.diff !== 0;
+                 return (
+                  <div key={adj.id} className={`flex flex-col lg:flex-row justify-between items-start lg:items-center p-8 rounded-[2.5rem] border transition-all group ${hasDiff ? 'bg-rose-500/5 border-rose-500/20' : 'bg-brand-bg/50 border-brand-border hover:border-brand-primary/30'}`}>
+                    <div className="mb-6 lg:mb-0">
+                       <p className="font-bold text-brand-text text-xl tracking-tighter group-hover:text-brand-primary transition-colors leading-none mb-2">{adj.name}</p>
+                       <p className="text-[10px] font-bold text-brand-muted tracking-widest font-mono opacity-60">SKU: {adj.sku}</p>
                     </div>
-                    <div className="flex gap-4 text-sm font-bold text-slate-600 items-center">
-                       <div className="text-center w-12">
-                          <span className="block text-[9px] text-slate-400 uppercase">Sistem</span>
-                          {adj.oldStock}
+                    <div className="flex gap-8 items-center w-full lg:w-auto bg-brand-card/50 p-6 rounded-[2rem] border border-brand-border/50">
+                       <div className="text-center">
+                          <span className="block text-[8px] font-bold text-brand-muted tracking-widest mb-2">Sistem</span>
+                          <span className="text-lg font-bold opacity-40">{adj.oldStock}</span>
                        </div>
-                       <div className="text-center w-12">
-                          <span className="block text-[9px] text-slate-400 uppercase">Fisik</span>
-                          {adj.newStock}
+                       <div className="w-px h-8 bg-brand-border"></div>
+                       <div className="text-center">
+                          <span className="block text-[8px] font-bold text-brand-muted tracking-widest mb-2">Fisik</span>
+                          <span className="text-lg font-bold">{adj.newStock}</span>
                        </div>
-                       <div className={`text-center w-16 rounded-lg px-2 py-1.5 border ${adj.diff === 0 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : adj.diff < 0 ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
-                          <span className="block text-[8px] uppercase opacity-80 mb-0.5">Selisih</span>
-                          {adj.diff > 0 ? `+${adj.diff}` : adj.diff}
+                       <div className={`text-center min-w-[100px] py-3 rounded-2xl border ${adj.diff === 0 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : adj.diff < 0 ? 'bg-rose-500/10 text-rose-500 border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]' : 'bg-brand-primary/10 text-brand-primary border-brand-primary/20 shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.1)]'}`}>
+                          <span className="block text-[8px] font-bold tracking-widest mb-1 opacity-80">Selisih</span>
+                          <span className="text-sm font-bold tracking-widest">{adj.diff > 0 ? `+${adj.diff}` : adj.diff}</span>
                        </div>
                     </div>
-                 </div>
-              ))}
-              {adjustments.length === 0 && <p className="text-center text-slate-400 py-4 text-sm">Tidak ada barang yang dihitung.</p>}
+                  </div>
+                 );
+              })}
+              {adjustments.length === 0 && (
+                <div className="text-center py-24 border-2 border-dashed border-brand-border rounded-[3rem] opacity-20">
+                   <AlertTriangle className="w-16 h-16 mx-auto mb-6" />
+                   <p className="text-xs font-bold tracking-widest">Tidak Ada Selisih Stok</p>
+                </div>
+              )}
            </div>
            
-           <div className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => setShowSummary(false)} className="w-full sm:w-1/3 py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all">Kembali Edit</button>
-              <button disabled={adjustments.length === 0} onClick={handleApply} className="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-600/30 active:scale-95 disabled:opacity-50 transition-all">KONFIRMASI & SIMPAN</button>
+           <div className="flex flex-col sm:flex-row gap-6 pt-12 border-t border-brand-border">
+              <button onClick={() => setShowSummary(false)} className="w-full sm:w-1/3 py-6 bg-brand-bg border border-brand-border text-brand-muted font-bold rounded-[2rem] hover:text-brand-text transition-all tracking-widest text-[10px] active:scale-95">Batalkan</button>
+              <button disabled={adjustments.length === 0} onClick={handleApply} className="flex-1 py-6 bg-brand-primary text-white font-bold rounded-[2rem] shadow-2xl shadow-brand-primary/40 active:scale-95 disabled:opacity-30 transition-all tracking-widest text-[10px] flex items-center justify-center gap-4">Simpan Perubahan <ArrowRight size={20}/></button>
            </div>
         </div>
       </div>
@@ -106,31 +150,63 @@ export default function CycleCountView({ products, onApplyAdjustments, cycleCoun
 
   if (!isCounting) {
     return (
-      <div className="p-4 md:p-8 h-full bg-slate-50 flex items-start justify-center overflow-y-auto">
-        <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl border border-slate-100 max-w-lg w-full text-center animate-in zoom-in-95">
-           <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6"><Scan className="w-10 h-10" /></div>
-           <h3 className="text-2xl font-black text-slate-800 mb-3">Stok Opname Nyicil</h3>
-           <p className="text-sm text-slate-500 mb-8 leading-relaxed">Sistem akan memilihkan 10 produk secara acak untuk Anda hitung fisiknya hari ini untuk meminimalisir fraud.</p>
-           <button onClick={startCount} className="w-full bg-blue-600 text-white font-bold py-4 px-10 rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-600/30 transition-transform active:scale-95">Mulai Cek Stok Hari Ini</button>
+      <div className="flex-1 p-8 md:p-16 bg-brand-bg text-brand-text font-sans h-full overflow-y-auto custom-scrollbar flex flex-col items-center transition-colors relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-accent/5 pointer-events-none"></div>
+        
+        <div className="bg-brand-card p-12 md:p-20 rounded-[4.5rem] shadow-2xl border border-brand-border max-w-2xl w-full text-center animate-in zoom-in-95 duration-500 relative z-10 overflow-hidden">
+           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-primary to-brand-accent"></div>
            
-           <div className="mt-12 border-t border-slate-100 pt-8 w-full text-left">
-              <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-blue-500"/> Riwayat Opname Terakhir</h4>
-              <div className="space-y-3">
+           <div className="w-28 h-28 bg-brand-primary/10 text-brand-primary rounded-[3rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-brand-primary/10 relative group">
+              <Scan className="w-14 h-14 group-hover:scale-110 transition-transform" />
+           </div>
+           
+           <h3 className="text-4xl font-black tracking-tighter mb-6 leading-none">Stok <span className="text-brand-primary">Opname</span></h3>
+           <p className="text-[10px] text-brand-muted font-bold mb-12 leading-relaxed max-w-sm mx-auto tracking-wider opacity-70">
+             Sistem akan memilih <span className="text-brand-text">10 barang secara acak</span> untuk Anda cek jumlah fisiknya hari ini.
+           </p>
+           
+           <button onClick={startCount} className="w-full bg-brand-primary text-white font-bold py-7 px-12 rounded-[2.5rem] shadow-2xl shadow-brand-primary/40 transition-all active:scale-95 tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-brand-secondary">
+             Mulai Opname Sekarang <ArrowRight size={22}/>
+           </button>
+           
+           <div className="mt-20 border-t border-brand-border pt-12 w-full text-left">
+              <div className="flex justify-between items-center mb-10">
+                <div>
+                  <h4 className="font-bold text-brand-text tracking-wider flex items-center gap-4 text-xs">
+                    <History className="w-6 h-6 text-brand-primary"/> Riwayat Opname
+                  </h4>
+                  <p className="text-[8px] font-bold text-brand-muted tracking-widest mt-1">Catatan Pengecekan Sebelumnya</p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-brand-bg rounded-xl border border-brand-border shadow-inner">
+                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                   <span className="text-[8px] font-bold text-brand-muted tracking-widest">Sistem Aktif</span>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
                 {cycleCountHistory.length === 0 ? (
-                   <p className="text-sm text-slate-400 text-center py-4">Belum ada riwayat opname.</p>
+                   <div className="text-center py-16 border-2 border-dashed border-brand-border rounded-[3rem] bg-brand-bg/30">
+                      <p className="text-[9px] font-bold text-brand-muted tracking-widest italic opacity-40">Belum ada riwayat opname</p>
+                   </div>
                 ) : (
                    cycleCountHistory.slice(0, 5).map(history => (
-                      <div key={history.id} className="flex justify-between items-center p-4 bg-slate-50 border border-slate-100 rounded-xl hover:border-blue-200 transition-colors">
-                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200"><ClipboardCheck className="w-5 h-5 text-emerald-500"/></div>
+                      <div key={history.id} className="flex justify-between items-center p-8 bg-brand-bg border border-brand-border rounded-[2.5rem] hover:border-brand-primary/40 transition-all group shadow-sm hover:shadow-xl">
+                         <div className="flex items-center gap-6">
+                            <div className="w-14 h-14 bg-brand-card rounded-2xl flex items-center justify-center border border-brand-border group-hover:scale-110 group-hover:border-brand-primary/30 transition-all shadow-inner">
+                               <ClipboardCheck className="w-7 h-7 text-brand-primary opacity-60 group-hover:opacity-100 transition-opacity"/>
+                            </div>
                             <div>
-                               <p className="font-bold text-sm text-slate-800">{history.date}</p>
-                               <p className="text-[10px] text-slate-500 font-mono mt-0.5">{history.id}</p>
+                               <p className="font-bold text-base text-brand-text tracking-tighter leading-none mb-2">{history.date}</p>
+                               <div className="flex items-center gap-3">
+                                  <span className="text-[9px] font-bold text-brand-muted tracking-widest font-mono">ID: {history.id}</span>
+                               </div>
                             </div>
                          </div>
                          <div className="text-right">
-                            <p className="text-xs font-bold text-slate-600">{history.itemsCounted} Item Dicek</p>
-                            <p className={`text-[10px] font-bold mt-0.5 ${history.totalDiscrepancy === 0 ? 'text-emerald-500' : 'text-red-500'}`}>Selisih: {history.totalDiscrepancy}</p>
+                            <p className="text-[10px] font-bold text-brand-text tracking-widest mb-2">{history.itemsCounted} barang dicek</p>
+                            <div className={`inline-flex items-center gap-2 text-[8px] font-bold px-4 py-1.5 rounded-xl border tracking-wider shadow-sm ${history.totalDiscrepancy === 0 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
+                               <Activity size={10} /> Selisih: {history.totalDiscrepancy}
+                            </div>
                          </div>
                       </div>
                    ))
@@ -145,53 +221,97 @@ export default function CycleCountView({ products, onApplyAdjustments, cycleCoun
   const progress = ccItems.filter(i => i.physicalStock !== '').length;
 
   return (
-    <div className="p-4 md:p-8 h-full bg-slate-50 overflow-y-auto">
-      <div className="max-w-3xl mx-auto bg-white rounded-[2rem] shadow-xl border border-slate-100 p-6 md:p-8 animate-in slide-in-from-bottom-8">
-        <div className="flex flex-col md:flex-row justify-between md:items-end mb-6 gap-4">
-          <div>
-            <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-              Input Fisik Barang
-              <button onClick={() => setShowScanner(!showScanner)} className={`p-2 rounded-lg border transition-colors ${showScanner ? 'bg-indigo-100 border-indigo-300 text-indigo-600' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`} title="Scan Barcode untuk Menambah Jumlah Fisik">
-                 <Barcode className="w-4 h-4" />
-              </button>
-            </h3>
-            <p className="text-sm text-slate-500 mt-1">Hitung barang di rak, ketik angkanya, atau gunakan scanner.</p>
-          </div>
-          <span className="text-sm font-black text-blue-600 bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">Progres: {progress} / {ccItems.length}</span>
-        </div>
+    <div className="flex-1 p-8 md:p-16 bg-brand-bg text-brand-text font-sans h-full overflow-y-auto custom-scrollbar transition-colors relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-accent/5 pointer-events-none"></div>
+
+      <div className="max-w-4xl mx-auto bg-brand-card rounded-[4.5rem] shadow-2xl border border-brand-border p-12 lg:p-16 animate-in slide-in-from-bottom-12 duration-700 relative z-10">
         
-        <div className="w-full bg-slate-100 rounded-full h-3 mb-6 overflow-hidden">
-          <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${(progress / ccItems.length) * 100}%` }}></div>
+        {/* ENHANCED PROGRESS NAVIGATOR */}
+        <div className="flex flex-col lg:flex-row justify-between lg:items-end mb-16 gap-10">
+          <div>
+            <div className="flex items-center gap-6 mb-4">
+              <h3 className="text-5xl font-black tracking-tighter leading-none">Proses <span className="text-brand-primary">Opname</span></h3>
+              <button onClick={() => setShowScanner(!showScanner)} className={`w-14 h-14 rounded-2xl border-2 transition-all active:scale-90 flex items-center justify-center ${showScanner ? 'bg-brand-primary text-white border-brand-primary shadow-2xl shadow-brand-primary/40' : 'bg-brand-bg border-brand-border text-brand-muted hover:border-brand-primary/50 hover:text-brand-primary shadow-inner'}`} title="Toggle Scanner Hub">
+                 <Barcode className="w-6 h-6" />
+              </button>
+            </div>
+            <p className="text-[10px] font-bold text-brand-muted tracking-wider ml-1 opacity-60">Masukkan jumlah fisik barang atau gunakan barcode scanner.</p>
+          </div>
+          
+          <div className="bg-brand-bg/80 backdrop-blur-sm border border-brand-border rounded-[2rem] p-4 flex items-center gap-6 pl-8 shadow-inner group/progress">
+             <div className="flex flex-col items-end">
+                <span className="text-[9px] font-bold text-brand-muted tracking-widest mb-1 opacity-60 group-hover/progress:text-brand-primary transition-colors">Proses Pengecekan</span>
+                <span className="text-xl font-black tracking-tighter">{progress} <span className="text-brand-muted opacity-20 mx-1">/</span> {ccItems.length}</span>
+             </div>
+             <div className="w-32 h-2.5 bg-brand-border rounded-full overflow-hidden shadow-inner">
+                <div className="bg-brand-primary h-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(var(--brand-primary-rgb),0.6)]" style={{ width: `${(progress / ccItems.length) * 100}%` }}></div>
+             </div>
+          </div>
         </div>
 
         {showScanner && (
-          <div className="mb-6 animate-in slide-in-from-top-4">
-             <BarcodeScanner onScan={handleBarcodeScan} compact={false} />
+          <div className="mb-16 animate-in slide-in-from-top-10 duration-700">
+             <div className="p-1.5 bg-gradient-to-br from-brand-primary/40 to-brand-accent/40 rounded-[2.5rem] shadow-2xl">
+                <div className="bg-brand-card rounded-[2.3rem] overflow-hidden">
+                   <BarcodeScanner onScan={handleBarcodeScan} compact={false} />
+                </div>
+             </div>
+             <p className="text-[9px] font-bold text-brand-primary text-center mt-6 tracking-widest animate-pulse">Scanner Aktif • Arahkan Barcode Barang ke Kamera</p>
           </div>
         )}
 
-        <div className="space-y-4 mb-8 max-h-[40vh] overflow-y-auto pr-2">
+        {/* HIGH-DENSITY AUDIT LIST */}
+        <div className="space-y-6 mb-16 max-h-[50vh] overflow-y-auto pr-6 custom-scrollbar">
           {ccItems.map(item => (
-            <div key={item.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl gap-4 hover:border-blue-300 transition-colors">
-              <div>
-                <p className="font-bold text-slate-800 text-lg">{item.name}</p>
-                <div className="flex items-center gap-2 mt-2">
-                   <span className="text-[10px] font-mono text-slate-500 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">{item.sku}</span>
-                   <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100">Sistem: {item.stock_pcs} Pcs</span>
+            <div key={item.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-8 bg-brand-bg border border-brand-border rounded-[3rem] gap-8 hover:border-brand-primary/40 transition-all group shadow-sm hover:shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              
+              <div className="flex-1">
+                <p className="font-bold text-brand-text text-2xl tracking-tighter group-hover:text-brand-primary transition-colors leading-none mb-4">{item.name}</p>
+                <div className="flex flex-wrap items-center gap-4">
+                   <div className="flex items-center gap-3 bg-brand-card px-4 py-2 rounded-2xl border border-brand-border shadow-inner">
+                      <Barcode size={14} className="text-brand-muted opacity-40" />
+                      <span className="text-[10px] font-bold text-brand-muted tracking-widest font-mono">{item.sku}</span>
+                   </div>
+                   <div className="flex items-center gap-3 bg-brand-primary/5 px-4 py-2 rounded-2xl border border-brand-primary/10 shadow-sm">
+                      <Boxes size={14} className="text-brand-primary" />
+                      <span className="text-[10px] font-bold text-brand-primary tracking-wider">Stok Sistem: {item.stock_pcs} barang</span>
+                   </div>
                 </div>
               </div>
-              <div className="relative w-full sm:w-40 shrink-0 flex items-center">
-                 <button onClick={() => setCcItems(prev => prev.map(i => i.id === item.id ? {...i, physicalStock: String(Math.max(0, parseInt(i.physicalStock||'0',10)-1))} : i))} className="w-10 h-12 bg-slate-200 text-slate-600 rounded-l-xl font-bold flex justify-center items-center hover:bg-slate-300 border-y-2 border-l-2 border-slate-300"><Minus className="w-4 h-4"/></button>
-                 <input type="number" placeholder="Fisik" value={item.physicalStock} onChange={(e) => setCcItems(prev => prev.map(i => i.id === item.id ? {...i, physicalStock: e.target.value} : i))} className="w-full bg-white border-y-2 border-slate-300 px-2 py-3 text-center font-black text-slate-800 text-lg focus:outline-none shadow-inner" />
-                 <button onClick={() => setCcItems(prev => prev.map(i => i.id === item.id ? {...i, physicalStock: String(parseInt(i.physicalStock||'0',10)+1)} : i))} className="w-10 h-12 bg-slate-200 text-slate-600 rounded-r-xl font-bold flex justify-center items-center hover:bg-slate-300 border-y-2 border-r-2 border-slate-300"><Plus className="w-4 h-4"/></button>
+              
+              <div className="flex items-center bg-brand-card p-2 rounded-[2.2rem] border border-brand-border shadow-inner w-full md:w-auto self-stretch md:self-center">
+                 <button onClick={() => setCcItems(prev => prev.map(i => i.id === item.id ? {...i, physicalStock: String(Math.max(0, parseInt(i.physicalStock||'0',10)-1))} : i))} className="w-16 h-16 bg-brand-bg text-brand-muted hover:text-brand-text hover:bg-brand-border rounded-[1.5rem] flex items-center justify-center transition-all active:scale-90 shadow-sm border border-transparent hover:border-brand-border/50">
+                   <Minus className="w-6 h-6"/>
+                 </button>
+                 <div className="relative group/val">
+                    <input 
+                      type="number" 
+                      placeholder="0" 
+                      value={item.physicalStock} 
+                      onChange={(e) => setCcItems(prev => prev.map(i => i.id === item.id ? {...i, physicalStock: e.target.value} : i))} 
+                      className="w-28 bg-transparent text-center font-black text-brand-text text-4xl focus:outline-none appearance-none tracking-tighter" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-brand-primary/20 rounded-full scale-x-0 group-focus-within/val:scale-x-100 transition-transform"></div>
+                 </div>
+                 <button onClick={() => setCcItems(prev => prev.map(i => i.id === item.id ? {...i, physicalStock: String(parseInt(i.physicalStock||'0',10)+1)} : i))} className="w-16 h-16 bg-brand-bg text-brand-primary hover:text-white hover:bg-brand-primary rounded-[1.5rem] flex items-center justify-center transition-all active:scale-90 shadow-2xl shadow-brand-primary/10 border border-transparent hover:border-brand-primary">
+                   <Plus className="w-6 h-6"/>
+                 </button>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-           <button onClick={() => setIsCounting(false)} className="w-full sm:w-1/3 py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all">Batal</button>
-           <button disabled={progress < ccItems.length} onClick={handleReview} className="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 disabled:opacity-50 disabled:bg-slate-300 transition-transform active:scale-95 shadow-lg shadow-blue-600/30">SELESAI & TINJAU SELISIH</button>
+        {/* FISCAL ACTIONS */}
+        <div className="flex flex-col sm:flex-row gap-6 pt-12 border-t border-brand-border">
+           <button onClick={() => setIsCounting(false)} className="w-full sm:w-1/3 py-7 bg-brand-bg border border-brand-border text-brand-muted font-bold rounded-[2.5rem] hover:text-rose-500 hover:border-rose-500/30 transition-all tracking-widest text-[10px] active:scale-95 shadow-sm">Tutup Opname</button>
+           <button 
+             disabled={progress < ccItems.length} 
+             onClick={handleReview} 
+             className="flex-1 py-7 bg-brand-primary text-white font-bold rounded-[2.5rem] hover:bg-brand-secondary disabled:opacity-30 transition-all active:scale-95 shadow-2xl shadow-brand-primary/40 tracking-widest text-[10px] flex items-center justify-center gap-4 group"
+           >
+             Cek Hasil Opname <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+           </button>
         </div>
       </div>
     </div>

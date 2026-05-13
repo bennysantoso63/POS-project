@@ -36,7 +36,7 @@ export default function History({
     });
   }, [transactions, search, filterDate]);
 
-  const formatRp = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
+import { formatRp } from '../utils/formatters';
 
   const handleVoid = () => {
     if (selectedTx.status !== 'completed') return showToast("Transaksi belum sukses atau sudah divoid.", "error");

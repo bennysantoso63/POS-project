@@ -1,309 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
-import { 
-  HardDrive, Activity, Moon, Sun
-} from 'lucide-react';
+import { HardDrive } from 'lucide-react';
 
-// Stores & Hooks
-import { useSessionStore } from './store/useSessionStore';
+// Contexts
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { TransactionProvider, useTransactionContext } from './contexts/TransactionContext';
+
+// Hooks
 import { usePosData } from './hooks/usePosData';
+import { useSembahyang } from './hooks/useSembahyang';
 
 // Components
 import Sidebar from './components/Sidebar';
-import SessionOverlay from './components/SessionOverlay';
+import CockpitLayout from './components/CockpitLayout';
 import CashierView from './components/CashierView';
 import DashboardView from './components/DashboardView';
 import InventoryView from './components/InventoryView';
 import HistoryView from './components/HistoryView';
 import CrmView from './components/CrmView';
-import MonitorView from './components/MonitorView';
-import SettingsView from './components/SettingsView';
-
-// Modals
-import { ProductModal, CustomerModal, SyncModal } from './components/Modals';
-import { ReceiptModal } from './components/AdditionalModals';
-
-// New Feature Components
-import PurchasingView from './components/PurchasingView';
-import CycleCountView from './components/CycleCountView';
 import AccountingView from './components/AccountingView';
-import RelationsView from './components/RelationsView';
-import PettyCashModal from './components/PettyCashModal';
 import IntelligenceView from './components/IntelligenceView';
+import SettingsView from './components/SettingsView';
+import LoginView from './components/LoginView';
+import { ReceiptModal } from './components/AdditionalModals';
+import useUIStore from './store/useUIStore';
 
+const AccessGuard = ({ canAccess, children, message = "Akses Ditolak" }) => {
+  if (!canAccess) return <div className="p-12 text-center text-brand-text/60 italic">{message}</div>;
+  return children;
+};
 
-
-export default function App() {
+// --- APP CONTENT (The Real Shell) ---
+function AppContent({ fetchData, posData }) {
   const { 
-    products, customers, transactions, sessions, movements, settings, 
-    suppliers, purchaseOrders, categories, heldBills, expenses, aprioriRules, isLoading, fetchData, stats 
-  } = usePosData();
+    currentUser, needsSetup, login, logout, isOwner, isManager, role, isLoading: authLoading 
+  } = useAuth();
 
+  const { 
+    cart, setCart, selectedCustomerId, setSelectedCustomerId, 
+    receiptToPrint, setReceiptToPrint, handleCheckout, handleHoldBill, handleRestoreBill 
+  } = useTransactionContext();
 
+  const { 
+    activeView, setActiveView, isDarkMode, toggleDarkMode 
+  } = useUIStore();
 
-  const { activeSession, setSession, clearSession } = useSessionStore();
-  const [opnameSelection, setOpnameSelection] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('cashier');
-  const [receiptToPrint, setReceiptToPrint] = useState(null);
-  const [pin, setPin] = useState('');
-  const [needsSetup, setNeedsSetup] = useState(false);
+  const { rfmData, aprioriRules, burnRate, bigBangData } = useSembahyang();
   const [setupForm, setSetupForm] = useState({ username: '', pin: '' });
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  
-  useEffect(() => {
-    if (isDarkMode) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [isDarkMode]);
 
-  
-  // Settings local state for real-time editing
-  const [localSettings, setLocalSettings] = useState({
-    name: '', slogan: '', phone: '', address: '', receiptFooter: '',
-    tax_type: 'OP', tax_start_year: '2024'
-  });
-
-  useEffect(() => {
-    const checkSetup = async () => {
-      const res = await window.api.checkSetup();
-      setNeedsSetup(res);
-    };
-    checkSetup();
-  }, []);
-
-  useEffect(() => {
-    if (settings) {
-      setLocalSettings({
-        name: settings.store_name || '',
-        slogan: settings.store_slogan || '',
-        phone: settings.store_phone || '',
-        address: settings.store_address || '',
-        receiptFooter: settings.receipt_footer || '',
-        tax_type: settings.tax_type || 'OP',
-        tax_start_year: settings.tax_start_year || '2024'
-      });
-    }
-  }, [settings]);
-
-  // Modals visibility
-  const [modals, setModals] = useState({ 
-    product: false, customer: false, sync: false, export: false, 
-    draft: false, openShift: false, closeShift: false, pettyCash: false,
-    confirmDelete: null, confirmDeleteCust: null 
-  });
-  const [forms, setForms] = useState({ 
-    product: { sku: '', name: '', category: 'Makanan', stock_pcs: '', price_retail: '', price_wholesale: '', uom_box_multiplier: '' }, 
-    customer: { name: '', phone: '', default_tier: 'eceran' } 
-  });
-  const [editing, setEditing] = useState({ product: null, customer: null });
+  const { products, customers, transactions, settings, categories } = posData;
 
   const formatIDR = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
-  // --- AUTH LOGIC ---
-  const handleLogin = async (e) => {
-    if (e) e.preventDefault();
-    if (!pin) return;
-    
-    const res = await window.api.login(pin);
-    if (res.success) {
-      setCurrentUser(res.user);
-      if (res.user.role === 'admin') setActiveTab('dashboard');
-      toast.success(`Selamat datang, ${res.user.username}`);
-      setPin('');
-    } else {
-      toast.error(res.error || "PIN Salah!");
-      setPin('');
-    }
-  };
-
-  const handleOpenShift = async (cash) => {
-    const val = parseInt(cash.replace(/\D/g, '') || '0');
-    const res = await window.api.openSession(val);
-    if (res.success) { 
-      setSession({ 
-        id: res.id, 
-        user_name: currentUser.username, 
-        opening_cash: val, 
-        expected_cash: val 
-      }); 
-      setModals({...modals, openShift: false});
-      toast.success("Sesi dibuka"); 
-      fetchData(); 
-    } else {
-      toast.error(res.error || "Gagal membuka sesi");
-    }
-  };
-
-  const handleCloseShift = async (cash) => {
-    const laciFisik = parseInt(cash.replace(/\D/g, '') || '0');
-    const res = await window.api.closeSession({ 
-      sessionId: activeSession.id, 
-      closingCash: laciFisik,
-      notes: `Tutup oleh ${currentUser.username}`
-    });
-    if (res.success) { 
-      setReceiptToPrint({ 
-        type: 'shift_report', 
-        data: res // Menggunakan objek lengkap dari backend
-      });
-      clearSession(); 
-      setCurrentUser(null); 
-      setModals({...modals, closeShift: false}); 
-      toast.success("Sesi ditutup"); 
-      fetchData();
-    } else {
-      toast.error(res.error || "Gagal menutup sesi");
-    }
-  };
-
-  // --- FEATURES HANDLERS ---
-  const handleCheckout = async (txData) => {
-    if (!activeSession && currentUser.role !== 'admin') return toast.error("Buka sesi dulu!");
-    
-    // [KB] Jika metode adalah piutang, panggil API createReceivable setelah transaksi sukses
-    const res = await window.api.processCheckout({
-      ...txData,
-      businessMode: settings.business_mode || 'RETAIL',
-      cashier_session_id: activeSession?.id || null,
-      userName: currentUser.username
-    });
-
-    if (res.success) {
-      if (txData.payment_method === 'receivable') {
-        await window.api.createReceivable({
-          transaction_id: res.txId,
-          customer_id: txData.customer_id,
-          amount: txData.total,
-          due_date: txData.due_date,
-          notes: `Bon dari Transaksi TX-${res.txId}`
-        });
-        toast.success("Piutang dicatat");
-      }
-      
-      setReceiptToPrint({ 
-        type: 'transaction', 
-        data: { 
-          id: `TX-${res.txId}`, 
-          total: txData.total, 
-          amountPaid: txData.paid_amount, 
-          changeAmount: txData.change_amount, 
-          items: txData.items, 
-          created_at: new Date().toLocaleString(),
-          payment_method: txData.payment_method
-        } 
-      });
-      
-      toast.success("Transaksi Berhasil"); 
-      fetchData();
-    } else {
-      toast.error(res.error || "Gagal memproses transaksi");
-    }
-  };
-
-  const handleRestoreBill = async (id) => {
-    return await window.api.restoreBill(id);
-  };
-
-  const handleHoldBill = async (cart, total) => {
-    if (cart.length === 0) return;
-    const label = prompt("Label Antrian:", `Antrian ${new Date().toLocaleTimeString()}`);
-    if (!label) return;
-
-    const res = await window.api.holdBill({
-      label,
-      cartItems: cart
-    });
-
-    if (res.success) {
-      toast.success("Antrian disimpan");
-      fetchData();
-    } else {
-      toast.error("Gagal menyimpan antrian");
-    }
-  };
-
-  const handleAddSupplier = async (data) => {
-    const res = await window.api.createSupplier(data);
-    if (res.success) { toast.success("Supplier ditambahkan"); fetchData(); }
-  };
-
-  const handleCreatePO = async (data) => {
-    const res = await window.api.createPurchaseOrder(data);
-    if (res.success) { 
-      setReceiptToPrint({ type: 'po', data: { ...data, id: res.id, po_number: data.poNumber, created_at: new Date().toLocaleString() } });
-      toast.success("PO diterbitkan"); fetchData(); 
-    }
-  };
-
-  const handleReceivePO = async (poId) => {
-    const res = await window.api.receivePurchaseOrder(poId);
-    if (res.success) { toast.success("Barang diterima & Stok diupdate"); fetchData(); }
-  };
-
-  const handlePettyCashSubmit = async (data) => {
-    const res = await window.api.createExpense({ 
-      amount: data.amount,
-      category: data.category || 'opex', // 'opex' | 'non_deductible' | 'prive'
-      description: data.description,
-      payment_method: data.payment_method || 'cash',
-      cashier_session_id: activeSession?.id
-    });
-    if (res.success) { 
-      setModals({...modals, pettyCash: false});
-      toast.success("Pengeluaran dicatat"); 
-      fetchData(); 
-    } else {
-      toast.error(res.error || "Gagal mencatat pengeluaran");
-    }
-  };
-
-  const handleApplyAdjustments = async (adjustments) => {
-    const res = await window.api.adjustStock(adjustments.map(a => ({ ...a, userName: currentUser.username })));
-    if (res.success) { toast.success("Stok Opname disimpan"); fetchData(); }
-  };
-
-  const handleSaveSettings = async (e) => {
-    if (e) e.preventDefault();
-    const res = await window.api.saveSettings({
-       store_name: localSettings.name,
-       store_slogan: localSettings.slogan,
-       store_phone: localSettings.phone,
-       store_address: localSettings.address,
-       receipt_footer: localSettings.receiptFooter,
-       tax_type: localSettings.tax_type,
-       tax_start_year: localSettings.tax_start_year
-    });
-    if (res.success) {
-      toast.success("Pengaturan disimpan");
-      fetchData();
-    }
-  };
+  if (authLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[#141E30] text-white">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-cyan-400"></div>
+      </div>
+    );
+  }
 
   if (needsSetup) {
     return (
-      <div className="flex h-screen bg-slate-950 items-center justify-center relative font-sans overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-slate-950 to-slate-950" />
-        <div className="bg-white/10 backdrop-blur-2xl p-12 rounded-[4rem] shadow-2xl w-full max-w-md flex flex-col items-center animate-in zoom-in-95 duration-500 border border-white/10 relative z-10">
-          <div className="w-24 h-24 bg-blue-600 text-white rounded-3xl flex items-center justify-center mb-8 shadow-xl">
-             <HardDrive className="w-12 h-12"/>
-          </div>
-          <h2 className="text-3xl font-black text-white mb-2 text-center uppercase tracking-tighter">Initial Setup</h2>
-          <p className="text-xs text-blue-300 mb-8 font-bold text-center opacity-60">Daftarkan akun Administrator pertama Anda</p>
-          
+      <div className="h-screen w-screen flex items-center justify-center bg-[#141E30] text-white">
+        <div className="bg-brand-card/10 p-12 rounded-[2rem] border border-brand-border flex flex-col items-center">
+          <HardDrive className="w-12 h-12 mb-4 text-cyan-400"/>
+          <h2 className="text-2xl font-bold mb-8">Setup Administrator</h2>
           <form onSubmit={async (e) => {
             e.preventDefault();
-            const res = await window.api.setupAdmin(setupForm);
-            if (res.success) {
-              toast.success("Admin berhasil dibuat!");
-              setNeedsSetup(false);
-            } else {
-              toast.error(res.error || "Gagal membuat admin");
-            }
-          }} className="w-full space-y-4">
-            <input type="text" placeholder="Admin Username" required value={setupForm.username} onChange={e=>setSetupForm({...setupForm, username: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-blue-500 transition-all" />
-            <input type="password" placeholder="Admin PIN (4 Digit)" required maxLength="4" value={setupForm.pin} onChange={e=>setSetupForm({...setupForm, pin: e.target.value.replace(/\D/g,'')})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold text-center text-2xl tracking-[0.5em] outline-none focus:border-blue-500 transition-all" />
-            <button type="submit" className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20">MULAI SISTEM</button>
+            const res = await window.api?.setupAdmin(setupForm);
+            if (res?.success) { toast.success("Admin Berhasil Dibuat"); window.location.reload(); }
+          }} className="space-y-4 w-64">
+            <input type="text" placeholder="Username" required className="w-full p-3 rounded-xl bg-white/5 border border-white/10" onChange={e=>setSetupForm({...setupForm, username: e.target.value})} />
+            <input type="password" placeholder="PIN (4 Digit)" maxLength="4" required className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-center text-xl tracking-widest" onChange={e=>setSetupForm({...setupForm, pin: e.target.value})} />
+            <button type="submit" className="w-full py-3 bg-cyan-600 rounded-xl font-bold">Inisialisasi</button>
           </form>
         </div>
       </div>
@@ -311,225 +82,83 @@ export default function App() {
   }
 
   if (!currentUser) {
-    return (
-      <div className="flex h-screen bg-slate-950 items-center justify-center relative font-sans overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-600/20 via-slate-950 to-slate-950" />
-        <div className="bg-white/10 backdrop-blur-2xl p-12 rounded-[4rem] shadow-2xl w-full max-w-md flex flex-col items-center animate-in zoom-in-95 duration-500 border border-white/10 relative z-10">
-          <div className="w-28 h-28 bg-gradient-to-br from-indigo-500 to-blue-700 text-white rounded-[2.5rem] flex items-center justify-center mb-10 shadow-2xl shadow-indigo-500/40 border-2 border-white/20">
-             <HardDrive className="w-14 h-14"/>
-          </div>
-          <h1 className="text-5xl font-black text-white mb-2 tracking-tighter">POS <span className="text-indigo-500 font-black">MANDIRI</span></h1>
-          <p className="text-[10px] font-black text-indigo-300 mb-12 tracking-[0.5em] uppercase opacity-80">Enterprise Deployment v2.4</p>
-          
-          <form onSubmit={handleLogin} className="w-full space-y-8">
-            <div className="relative group">
-               <input 
-                 type="password" 
-                 autoFocus 
-                 required 
-                 value={pin} 
-                 onChange={e=>setPin(e.target.value.replace(/\D/g,''))} 
-                 className="w-full bg-white/5 border-2 border-white/10 text-white rounded-[2rem] py-6 text-center text-5xl font-black outline-none tracking-[0.5em] shadow-inner focus:border-indigo-400 focus:bg-white/10 transition-all backdrop-blur-md placeholder:text-white/10" 
-                 placeholder="••••" 
-                 maxLength="4" 
-               />
-               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-indigo-600 rounded-full border border-indigo-400 shadow-lg">
-                  <span className="text-[9px] font-black text-white uppercase tracking-widest">Enter Security PIN</span>
-               </div>
-            </div>
-            
-            <button type="submit" className="w-full py-6 bg-indigo-600 text-white font-black text-xl rounded-[2rem] hover:bg-indigo-500 active:scale-95 transition-all shadow-2xl shadow-indigo-600/30 border-t border-white/20">
-              MASUK SISTEM
-            </button>
-            
-            <div className="grid grid-cols-2 gap-4 text-center">
-               <div className="p-4 bg-white/5 rounded-[1.5rem] border border-white/5">
-                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Admin Access</p>
-                  <p className="text-xs font-black text-white">PIN: 1234</p>
-               </div>
-               <div className="p-4 bg-white/5 rounded-[1.5rem] border border-white/5">
-                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Cashier Access</p>
-                  <p className="text-xs font-black text-white">PIN: 1111</p>
-               </div>
-            </div>
-          </form>
-          
-          <div className="mt-12 flex items-center gap-2 opacity-30 group cursor-default">
-             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-             <span className="text-[9px] font-black text-white uppercase tracking-[0.2em]">Atomic Sync Service Running</span>
-          </div>
-        </div>
-        <Toaster position="top-right" />
-      </div>
-    );
+    return <LoginView onLogin={(pin) => login(pin)} />;
   }
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'cashier': return (
-        <CashierView 
-          products={products} 
-          categories={categories}
-          customers={customers} 
-          heldBills={heldBills}
-          settings={settings}
-          activeSession={activeSession} 
-          onCheckout={handleCheckout}
-          onHoldBill={handleHoldBill}
-          onRestoreBill={handleRestoreBill}
-          onOpenShift={() => setModals({...modals, openShift: true})}
-          showToast={(msg, type) => type === 'error' ? toast.error(msg) : toast.success(msg)}
-        />
-      );
-      case 'dashboard': return <DashboardView transactions={transactions} products={products} formatIDR={formatIDR} onExport={() => setModals({...modals, export: true})} />;
-      case 'accounting': return <AccountingView transactions={transactions} expenses={expenses} products={products} settings={settings} />;
-      case 'inventory': return (
-        <InventoryView 
-          products={products} 
-          transactions={transactions} 
-          onAddProduct={async (data) => { await window.api.addProduct(data); fetchData(); }} 
-          onUpdateProduct={async (id, data) => { await window.api.updateProduct(id, data); fetchData(); }} 
-          onDeleteProduct={async (p) => { if(confirm('Hapus produk ini?')) { await window.api.deleteProduct(p.id || p); fetchData(); } }} 
-          onStartOpname={(selected) => { setOpnameSelection(selected); setActiveTab('cycle_count'); }} 
-          formatIDR={formatIDR} 
-        />
-      );
-      case 'purchasing': return (
-        <PurchasingView 
-          products={products} 
-          suppliers={suppliers} 
-          purchaseOrders={purchaseOrders} 
-          onAddSupplier={handleAddSupplier} 
-          onCreatePO={handleCreatePO} 
-          onReceivePO={handleReceivePO} 
-          onPayPO={async (id, data) => { await window.api.payPurchaseOrder(id, data); fetchData(); }}
-          showToast={(msg, type) => type === 'error' ? toast.error(msg) : toast.success(msg)}
-        />
-      );
-      case 'cycle_count': return <CycleCountView products={products} onApplyAdjustments={handleApplyAdjustments} cycleCountHistory={[]} preSelected={opnameSelection} />;
-      case 'crm': return <CrmView customers={customers} onAddCustomer={() => setModals({...modals, customer: true})} onEditCustomer={(c) => { setEditing({...editing, customer: c}); setForms({...forms, customer: c}); setModals({...modals, customer: true}); }} onDeleteCustomer={(c) => setModals({...modals, confirmDeleteCust: c})} formatIDR={formatIDR} />;
-      case 'piutang': return (
-        <RelationsView 
-          customers={customers} 
-          transactions={transactions} 
-          onRecordPayment={async (data) => { await window.api.recordPayment(data); fetchData(); }} 
-          onAddCustomer={async (data) => { await window.api.addCustomer(data); fetchData(); }}
-          showToast={(msg, type) => type === 'error' ? toast.error(msg) : toast.success(msg)}
-        />
-      );
-      case 'history': return (
-        <HistoryView 
-          transactions={transactions} 
-          onPrintReceipt={(tx) => setReceiptToPrint({ type: 'transaction', data: tx })} 
-          onVoidTransaction={async (id) => { await window.api.voidTransaction(id); fetchData(); }} 
-          currentUser={currentUser} 
-          showToast={(msg, type) => type === 'error' ? toast.error(msg) : toast.success(msg)}
-        />
-      );
-      case 'monitoring': return <MonitorView sessions={sessions} movements={movements} subTab="sessions" onSubTabChange={() => {}} formatIDR={formatIDR} />;
-      case 'intelligence': return (
-        <IntelligenceView 
-          currentUser={currentUser}
-          transactions={transactions} 
-          products={products} 
-          customers={customers} 
-        />
-      );
-
-      case 'settings': return <SettingsView config={localSettings} onConfigChange={setLocalSettings} onSave={handleSaveSettings} />;
-
-      default: return (
-        <CashierView 
-          products={products} 
-          categories={categories}
-          customers={customers} 
-          heldBills={heldBills}
-          settings={settings}
-          activeSession={activeSession} 
-          onCheckout={handleCheckout}
-          onHoldBill={handleHoldBill}
-          onRestoreBill={handleRestoreBill}
-          onOpenShift={() => setModals({...modals, openShift: true})}
-          showToast={(msg, type) => type === 'error' ? toast.error(msg) : toast.success(msg)}
-          aprioriRules={aprioriRules}
-        />
-
-      );
+    switch (activeView) {
+      case 'cashier':      
+        return (
+          <CashierView 
+            products={products} categories={categories} customers={customers} settings={settings} 
+            cart={cart} setCart={setCart} selectedCustomerId={selectedCustomerId} setSelectedCustomerId={setSelectedCustomerId}
+            onCheckout={handleCheckout} onHoldBill={handleHoldBill} onRestoreBill={handleRestoreBill}
+          />
+        );
+      case 'dashboard':    return <DashboardView transactions={transactions} products={products} formatIDR={formatIDR} />;
+      case 'inventory':    return <InventoryView products={products} categories={categories} />;
+      case 'history':      return <HistoryView transactions={transactions} />;
+      case 'crm':          return <CrmView customers={customers} />;
+      case 'accounting':   
+        return (
+          <AccessGuard canAccess={isOwner || isManager} message="Modul Akuntansi hanya untuk Owner atau Manager.">
+             <AccountingView transactions={transactions} />
+          </AccessGuard>
+        );
+      case 'intelligence': 
+        return (
+          <AccessGuard canAccess={isOwner || isManager} message="Intel Ling-Ling hanya tersedia untuk level Manager ke atas.">
+            <IntelligenceView rfmData={rfmData} aprioriRules={aprioriRules} burnRate={burnRate} bigBangData={bigBangData} />
+          </AccessGuard>
+        );
+      case 'settings':     return <SettingsView settings={settings} />;
+      default:             return <CashierView products={products} categories={categories} customers={customers} />;
     }
   };
 
   return (
-    <div className={`flex h-screen font-sans antialiased overflow-hidden transition-colors duration-500 ${isDarkMode ? 'dark bg-[#141E30] text-slate-100' : 'bg-white text-slate-800'}`}>
+    <div className="h-screen w-screen bg-brand-bg text-brand-text flex overflow-hidden font-sans">
+      <CockpitLayout userRole={role} terminalName={settings?.store_name || 'LING-LING POS'} onTabChange={setActiveView}>
+        <Sidebar 
+            activeTab={activeView} onTabChange={setActiveView} 
+            currentUser={currentUser} onLogout={logout} 
+            isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} 
+            isOwner={isOwner} isManager={isManager} 
+        />
+        <main className="flex-1 overflow-hidden relative">
+          {renderContent()}
+        </main>
+      </CockpitLayout>
 
-      <Sidebar 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-        isAdmin={currentUser?.role === 'admin'} 
-        currentUser={currentUser} 
-        activeSession={activeSession} 
-        onLogout={() => { setCurrentUser(null); setPin(''); }} 
-        onCloseShift={() => setModals({...modals, closeShift: true})} 
-        onOpenPettyCash={() => setModals({...modals, pettyCash: true})} 
+      <ReceiptModal 
+        show={!!receiptToPrint} receipt={receiptToPrint} settings={settings} 
+        onPrint={(r) => { window.api?.printReceipt(r.data || r); setReceiptToPrint(null); }} 
+        onClose={() => setReceiptToPrint(null)} 
       />
       
-      <main className="flex-1 overflow-hidden transition-colors duration-500 relative rounded-l-[3rem] shadow-[-20px_0_40px_rgba(0,0,0,0.5)] border-l border-white/5 dark:border-[#35577D]/30 h-full bg-slate-50 dark:bg-[#141E30] text-slate-900 dark:text-slate-100">
-
-        <div className="absolute top-4 right-8 z-50 flex items-center gap-4">
-           {/* Night Mode Toggle */}
-           <button 
-             onClick={() => setIsDarkMode(!isDarkMode)}
-             className={`p-2 rounded-xl border transition-all flex items-center gap-2 shadow-sm active:scale-90 ${isDarkMode ? 'bg-slate-900 border-slate-800 text-amber-400' : 'bg-white border-slate-200 text-slate-500'}`}
-             title={isDarkMode ? 'Day Mode' : 'Night Mode'}
-           >
-              {isDarkMode ? <Sun className="w-4 h-4 fill-current" /> : <Moon className="w-4 h-4" />}
-              <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">{isDarkMode ? 'Day' : 'Night'}</span>
-           </button>
-
-           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${activeSession ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-slate-100 border-slate-200 text-slate-400'}`}>
-              <Activity className={`w-3 h-3 ${activeSession ? 'animate-pulse' : ''}`}/>
-              {activeSession ? `Shift Aktif: ${activeSession.user_name}` : 'Shift Closed'}
-           </div>
-        </div>
-
-        {renderContent()}
-      </main>
-
-      <SessionOverlay currentUser={currentUser} onLogin={() => {}} activeSession={activeSession} showOpenShiftModal={modals.openShift} onOpenShift={handleOpenShift} showCloseShiftModal={modals.closeShift} onCloseShift={handleCloseShift} isLoading={isLoading} storeConfig={{ serverIp: settings.server_ip || '127.0.0.1' }} />
-      <PettyCashModal show={modals.pettyCash} onSubmit={handlePettyCashSubmit} onClose={() => setModals({...modals, pettyCash: false})} />
-      <ProductModal 
-        show={modals.product} 
-        editing={editing.product} 
-        form={forms.product} 
-        onChange={(f) => setForms({...forms, product: f})} 
-        onSave={async (e) => { 
-          e.preventDefault(); 
-          if (editing.product) {
-            await window.api.updateProduct(editing.product.id, forms.product);
-          } else {
-            await window.api.addProduct(forms.product);
-          }
-          setModals({...modals, product: false}); 
-          fetchData(); 
-        }} 
-        onClose={() => setModals({...modals, product: false})} 
-        formatIDR={formatIDR} 
-      />
-      <CustomerModal 
-        show={modals.customer} 
-        editing={editing.customer} 
-        form={forms.customer} 
-        onChange={(f) => setForms({...forms, customer: f})} 
-        onSave={async (e) => { 
-          e.preventDefault(); 
-          await window.api.addCustomer(forms.customer); 
-          setModals({...modals, customer: false}); 
-          fetchData(); 
-        }} 
-        onClose={() => setModals({...modals, customer: false})} 
-      />
-      <SyncModal show={modals.sync} onSync={async (e) => { const reader = new FileReader(); reader.onload = async (ev) => { await window.api.importCsv(ev.target.result); setModals({...modals, sync: false}); fetchData(); }; reader.readAsText(e.target.files[0]); }} onClose={() => setModals({...modals, sync: false})} />
-      <ReceiptModal show={!!receiptToPrint} receipt={receiptToPrint} settings={settings} onPrint={(r) => { window.api.printReceipt(r.data || r); setReceiptToPrint(null); }} onClose={() => setReceiptToPrint(null)} formatIDR={formatIDR} />
       <Toaster position="top-right" />
     </div>
+  );
+}
+
+// --- ROOT APP ---
+export default function App() {
+  const posData = usePosData();
+  const { fetchData, isLoading: posLoading } = posData;
+
+  if (posLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[#141E30] text-white">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-cyan-400"></div>
+      </div>
+    );
+  }
+
+  return (
+    <AuthProvider>
+      <TransactionProvider fetchData={fetchData}>
+        <AppContent fetchData={fetchData} posData={posData} />
+      </TransactionProvider>
+    </AuthProvider>
   );
 }

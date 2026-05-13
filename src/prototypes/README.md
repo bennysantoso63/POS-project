@@ -26,7 +26,7 @@
 - **Ling-Ling Chat** — Asisten NLP Lokal (Zero-API)
   - Intent: Kasbon, Barang Laku, Omzet, Stok Rendah
 - **Burn-Rate Predictor** — Prediksi hari stok habis
-- **RFM Matrix** — Segmentasi pelanggan otomatis (Donatur Emas / Umat Aktif / Umat Pasif)
+- **RFM Matrix** — Segmentasi pelanggan otomatis (Donatur Emas / Pelanggan Aktif / Pelanggan Pasif)
 - **RBAC Guard** — Hanya Owner/Admin yang bisa akses
 
 **Catatan Integrasi:**

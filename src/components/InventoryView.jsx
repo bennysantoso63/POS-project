@@ -1,205 +1,254 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
-  Package, Search, PlusCircle, Trash, Edit, 
-  AlertTriangle, Box, Filter, UploadCloud, Printer, Package as PackageIcon
+  Package, Search, Plus, Edit, Trash2, Filter, 
+  ArrowUpDown, AlertTriangle, CheckCircle, ChevronDown,
+  BarChart2, MoreVertical, Layers, Download, Scan, Printer,
+  Eye, Tag, Database, Activity, Box, Zap, ShieldCheck, XCircle, ChevronRight, Globe, Workflow
 } from 'lucide-react';
+import CustomDropdown from './ui/CustomDropdown';
 
 export default function InventoryView({ 
-  products, 
-  transactions, 
+  products = [], 
   onAddProduct, 
   onUpdateProduct, 
   onDeleteProduct, 
   onStartOpname, 
-  onShowSync, 
-  onPrintLabel,
-  formatIDR 
+  formatIDR, 
+  currentUser,
+  onPrintLabel
 }) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('Semua');
+  const [sortBy, setSortBy] = useState('name'); 
 
-  const getStockBreakdown = (prod) => {
-    // Basic breakdown: stock_pcs is the master unit
-    return `${prod.stock_pcs} PCS`;
-  };
+  const isAdmin = currentUser?.role === 'admin';
 
-  const velocityData = useMemo(() => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString();
+  // --- ANALISA DATA INVENTARIS ---
+  const categories = ['Semua', ...new Set(products.map(p => p.category).filter(Boolean))];
 
-    const salesMap = {};
-    transactions.forEach(tx => {
-      if (tx.status !== 'void' && (tx.created_at || tx.date) > thirtyDaysAgoStr) {
-        tx.items?.forEach(item => {
-          const pid = item.product_id || item.id;
-          salesMap[pid] = (salesMap[pid] || 0) + (item.qty || 0);
-        });
-      }
-    });
-
-    return products.map(p => {
-      const dailyAvg = (salesMap[p.id] || 0) / 30;
-      const dsi = dailyAvg > 0 ? Math.round(p.stock_pcs / dailyAvg) : Infinity;
-      let vLabel = ''; let vStyle = '';
-      if (dsi === Infinity) { vLabel = 'Stok Mati'; vStyle = 'bg-slate-100 text-slate-500'; }
-      else if (dsi <= 14) { vLabel = `${dsi} Hari ⚡`; vStyle = 'bg-emerald-100 text-emerald-700'; }
-      else if (dsi <= 45) { vLabel = `${dsi} Hari 👍`; vStyle = 'bg-blue-100 text-blue-700'; }
-      else { vLabel = `${dsi} Hari 🐢`; vStyle = 'bg-red-100 text-red-700'; }
-      return { ...p, dsi, vLabel, vStyle };
-    });
-  }, [products, transactions]);
-
-  const filteredProducts = useMemo(() => velocityData.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase()))
-  ), [velocityData, searchQuery]);
-
-  const invStats = useMemo(() => {
-    const totalItems = products.length;
-    const lowStock = products.filter(p => p.stock_pcs <= 10).length;
-    const totalValuation = products.reduce((a, b) => a + (b.stock_pcs * (b.cost_price || 0)), 0);
-    return { totalItems, lowStock, totalValuation };
+  const inventoryStats = useMemo(() => {
+    const totalValuation = products.reduce((acc, p) => acc + (p.stock_pcs * (p.cost_price || 0)), 0);
+    const lowStockCount = products.filter(p => p.stock_pcs <= (p.low_stock_threshold || 10)).length;
+    return {
+      totalItems: products.length,
+      totalValuation,
+      lowStockCount,
+      outOfStock: products.filter(p => p.stock_pcs <= 0).length
+    };
   }, [products]);
 
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
+                             p.sku?.toLowerCase().includes(search.toLowerCase());
+        const matchesCategory = categoryFilter === 'Semua' || p.category === categoryFilter;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'name') return a.name.localeCompare(b.name);
+        if (sortBy === 'stock') return b.stock_pcs - a.stock_pcs;
+        if (sortBy === 'price') return b.price_retail - a.price_retail;
+        return 0;
+      });
+  }, [products, search, categoryFilter, sortBy]);
+
   return (
-    <div className="p-6 md:p-10 bg-slate-50/50 h-full overflow-y-auto w-full pb-24 md:pb-10 animate-in fade-in duration-500">
-      {/* Header & Stats */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 mb-10">
-        <div className="flex-1">
-           <h1 className="text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
-             <div className="p-3 bg-blue-600 rounded-[1.2rem] shadow-lg shadow-blue-500/30">
-               <PackageIcon className="w-6 h-6 text-white"/>
-             </div>
-             INVENTORY <span className="text-blue-600">MASTER</span>
-           </h1>
-           <p className="text-slate-400 font-bold text-xs mt-2 uppercase tracking-widest">Manajemen Stok & Katalog Produk Terintegrasi</p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full lg:w-auto">
-           {[
-             { label: 'TOTAL BARANG', val: invStats.totalItems, sub: 'SKU Terdaftar', color: 'blue', icon: PackageIcon },
-             { label: 'STOK KRITIS', val: invStats.lowStock, sub: 'Butuh Restock', color: 'red', icon: AlertTriangle },
-             { label: 'VALUASI STOK', val: formatIDR(invStats.totalValuation), sub: 'Estimasi Nilai HPP', color: 'emerald', icon: Box, hidden: 'sm' }
-           ].map((s, i) => (
-             <div key={i} className={`bg-white p-5 rounded-[2rem] border-2 border-slate-50 shadow-sm flex items-center gap-4 ${s.hidden === 'sm' ? 'hidden sm:flex' : ''}`}>
-                <div className={`w-10 h-10 bg-${s.color}-50 text-${s.color}-600 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                   <s.icon className="w-5 h-5"/>
-                </div>
-                <div>
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{s.label}</p>
-                   <p className={`text-sm font-black text-${s.color === 'red' ? 'red-600' : 'slate-900'}`}>{s.val}</p>
-                </div>
-             </div>
-           ))}
-        </div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-white p-4 rounded-[2.2rem] border-2 border-slate-50 shadow-sm">
-        <div className="relative flex-1 w-full max-w-lg">
-           <input 
-             type="text" 
-             placeholder="Cari Nama Barang, SKU, atau Kode..." 
-             value={searchQuery} 
-             onChange={(e) => setSearchQuery(e.target.value)} 
-             className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white transition-all" 
-           />
-           <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-300" />
-           <div className="absolute right-4 top-3.5 flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">{filteredProducts.length} HASIL</span>
-           </div>
+    <div className="flex-1 p-8 md:p-12 lg:p-16 overflow-y-auto custom-scrollbar bg-brand-bg text-brand-text font-sans h-full relative selection:bg-brand-primary/30 selection:text-white">
+      
+      {/* HEADER UTAMA INVENTARIS */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-16 gap-10 relative z-10">
+        <div>
+          <div className="flex items-center gap-4 mb-4">
+             <span className="px-4 py-1.5 bg-brand-primary/10 text-brand-primary text-[10px] font-bold rounded-2xl tracking-widest border border-brand-primary/20 shadow-sm">Katalog Barang</span>
+             <span className="px-4 py-1.5 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-2xl tracking-widest border border-emerald-500/20 shadow-sm">Sistem Aktif</span>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black tracking-tighter flex items-center gap-6 leading-none">
+             Stok <span className="text-brand-primary">Barang</span>
+          </h1>
+          <p className="text-brand-muted text-[11px] font-bold mt-5 tracking-widest opacity-60 leading-relaxed max-w-2xl">
+            Pusat data produk dan manajemen stok untuk memudahkan pengelolaan barang di toko dan gudang Anda.
+          </p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
-           <button onClick={onStartOpname} className="flex-1 md:flex-none bg-orange-500 hover:bg-orange-600 text-white px-6 py-3.5 rounded-2xl font-black flex items-center justify-center gap-2 text-[10px] shadow-xl shadow-orange-500/20 transition-all active:scale-95 uppercase tracking-widest">
-             <Filter className="w-4 h-4" /> Opname Acak
-           </button>
-           <button onClick={onShowSync || (() => {})} className="flex-1 md:flex-none bg-white hover:bg-slate-50 text-slate-600 px-6 py-3.5 rounded-2xl font-black flex items-center justify-center gap-2 text-[10px] border-2 border-slate-100 transition-all active:scale-95 uppercase tracking-widest">
-             <UploadCloud className="w-4 h-4 text-blue-500" /> Import CSV
-           </button>
-           <button onClick={onAddProduct} className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-2xl font-black flex items-center justify-center gap-2 text-[10px] shadow-xl shadow-blue-500/30 transition-all active:scale-95 uppercase tracking-widest">
-             <PlusCircle className="w-4 h-4" /> Tambah Barang
-           </button>
+        {isAdmin && (
+          <div className="flex flex-wrap items-center gap-6 w-full xl:w-auto">
+            <button 
+              onClick={onStartOpname} 
+              className="flex-1 xl:flex-none flex items-center justify-center gap-4 px-10 py-5 bg-brand-card/60 backdrop-blur-md text-brand-text rounded-[2rem] text-[11px] font-bold tracking-widest hover:bg-brand-bg transition-all border-2 border-brand-border shadow-xl shadow-black/5 active:scale-95 group"
+            >
+              <Workflow className="w-5 h-5 text-brand-primary group-hover:rotate-180 transition-transform duration-700" /> Cek Stok (Opname)
+            </button>
+            <button 
+              onClick={onAddProduct} 
+              className="flex-1 xl:flex-none flex items-center justify-center gap-4 px-10 py-5 bg-brand-primary text-white rounded-[2rem] text-[11px] font-bold tracking-widest hover:bg-brand-secondary transition-all shadow-[0_24px_48px_-12px_rgba(var(--brand-primary-rgb),0.5)] active:scale-95 group"
+            >
+              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center group-hover:rotate-90 transition-transform duration-500">
+                 <Plus className="w-5 h-5" /> 
+              </div>
+              Tambah Barang Baru
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* RINGKASAN ANALISA STOK */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 relative z-10">
+        {[
+          { label: 'Total Jenis Produk', value: inventoryStats.totalItems, icon: Package, color: 'text-brand-primary', bg: 'bg-brand-primary/10', border: 'border-brand-primary/20' },
+          { label: 'Perlu Stok Ulang', value: inventoryStats.lowStockCount, icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+          { label: 'Total Aset Barang', value: formatIDR(inventoryStats.totalValuation), icon: Activity, color: 'text-brand-accent', bg: 'bg-brand-accent/10', border: 'border-brand-accent/20', isAdminOnly: true },
+          { label: 'Barang Kosong', value: inventoryStats.outOfStock, icon: Trash2, color: 'text-brand-muted', bg: 'bg-brand-card/40', border: 'border-brand-border/40' },
+        ].filter(s => !s.isAdminOnly || isAdmin).map((stat, idx) => (
+          <div key={idx} className="bg-brand-card/60 backdrop-blur-md border border-brand-border p-10 rounded-[3.5rem] shadow-2xl shadow-black/5 flex items-center gap-8 group hover:-translate-y-2 transition-all">
+            <div className={`w-20 h-20 rounded-[2rem] ${stat.bg} ${stat.color} flex items-center justify-center border ${stat.border} shadow-inner group-hover:scale-110 transition-transform duration-500`}>
+              <stat.icon className="w-9 h-9" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-brand-muted tracking-widest mb-3 leading-none opacity-60">{stat.label}</p>
+              <h3 className="text-3xl font-black tracking-tighter leading-none">{stat.value}</h3>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* MESIN PENCARIAN & FILTER */}
+      <div className="bg-brand-card/40 backdrop-blur-xl border border-brand-border p-6 rounded-[3rem] mb-12 shadow-2xl shadow-black/5 flex flex-col lg:flex-row gap-6 items-center relative z-40 overflow-visible">
+        <div className="relative flex-1 w-full group">
+          <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-6 h-6 text-brand-muted group-focus-within:text-brand-primary transition-all duration-500" />
+          <input 
+            type="text" 
+            placeholder="Cari nama barang atau kode (SKU)..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-white/60 dark:bg-white/10 backdrop-blur-md border-2 border-brand-border/50 rounded-[2rem] py-5 pl-20 pr-8 text-xs font-bold text-brand-text outline-none focus:border-brand-primary transition-all shadow-sm placeholder:text-brand-text/30 hover:bg-white/80 dark:hover:bg-white/20 tracking-wider"
+          />
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+          <CustomDropdown 
+            value={categoryFilter} 
+            onChange={setCategoryFilter} 
+            options={categories} 
+            label="Kategori"
+            icon={<Filter className="w-4 h-4" />}
+          />
+
+          <CustomDropdown 
+            value={sortBy} 
+            onChange={setSortBy} 
+            options={[
+              { value: 'name', label: 'Urutkan: Nama' },
+              { value: 'stock', label: 'Urutkan: Stok' },
+              { value: 'price', label: 'Urutkan: Harga Jual' }
+            ]} 
+            label="Urutan"
+            icon={<ArrowUpDown className="w-4 h-4" />}
+          />
         </div>
       </div>
 
-      {/* Table Container */}
-      <div className="bg-white rounded-[2.5rem] border-2 border-slate-50 shadow-sm overflow-hidden overflow-x-auto custom-scrollbar">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-slate-50/50">
-              <th className="px-8 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Informasi Produk</th>
-              <th className="px-6 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Kategori</th>
-              <th className="px-6 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Harga Jual</th>
-              <th className="px-6 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Harga Grosir</th>
-              <th className="px-6 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">HPP (Modal)</th>
-              <th className="px-6 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Posisi Stok</th>
-              <th className="px-6 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Velocity</th>
-              <th className="px-8 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {filteredProducts.map((prod) => (
-              <tr key={prod.id} className="hover:bg-blue-50/30 transition-colors group">
-                <td className="px-8 py-6">
-                   <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shadow-sm transition-all group-hover:scale-110 ${prod.stock_pcs <= 10 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
-                        {prod.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                         <p className="font-black text-slate-900 text-sm tracking-tight">{prod.name}</p>
-                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-wider">{prod.sku || 'No SKU'}</span>
-                            {prod.stock_pcs <= 10 && <span className="bg-red-50 text-red-500 text-[9px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 animate-pulse uppercase"><AlertTriangle className="w-2 h-2"/> Low</span>}
-                         </div>
-                      </div>
-                   </div>
-                </td>
-                <td className="px-6 py-6">
-                   <span className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl text-[10px] font-black border-2 border-slate-200 uppercase tracking-wider">{prod.category || 'UMUM'}</span>
-                </td>
-                <td className="px-6 py-6 text-right">
-                   <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5 tracking-tighter">Retail</p>
-                   <p className="font-black text-blue-600 text-base">{formatIDR(prod.price_retail)}</p>
-                </td>
-                <td className="px-6 py-6 text-right">
-                   <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5 tracking-tighter">Wholesale</p>
-                   <p className="font-black text-indigo-600 text-base">{formatIDR(prod.price_wholesale)}</p>
-                </td>
-                <td className="px-6 py-6 text-right">
-                   <p className="text-[9px] font-black text-red-300 uppercase mb-0.5 tracking-tighter">COGS</p>
-                   <p className="font-black text-red-500 text-sm">{prod.cost_price ? formatIDR(prod.cost_price) : '--'}</p>
-                </td>
-                <td className="px-6 py-6">
-                   <div className="flex flex-col items-center">
-                      <div className="font-black text-slate-800 text-lg tracking-tighter">{prod.stock_pcs} <span className="text-[10px] font-bold text-slate-400 uppercase">Unit</span></div>
-                      <div className="text-[9px] font-black text-slate-400 mt-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 group-hover:border-blue-100 transition-all">{getStockBreakdown(prod).toUpperCase()}</div>
-                   </div>
-                </td>
-                <td className="px-6 py-6 text-center">
-                   <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${prod.vStyle}`}>{prod.vLabel}</span>
-                </td>
-                <td className="px-8 py-6">
-                  <div className="flex items-center justify-center gap-2">
-                    <button onClick={() => (onPrintLabel ? onPrintLabel(prod) : alert('Printer Service Offline'))} className="p-3 bg-white text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border-2 border-slate-100 rounded-2xl shadow-sm transition-all hover:border-indigo-200 active:scale-90" title="Cetak Label"><Printer className="w-4 h-4" /></button>
-                    <button onClick={() => onUpdateProduct(prod.id, prod)} className="p-3 bg-white text-slate-400 hover:text-blue-600 hover:bg-blue-50 border-2 border-slate-100 rounded-2xl shadow-sm transition-all hover:border-blue-200 active:scale-90" title="Edit Barang"><Edit className="w-4 h-4" /></button>
-                    <button onClick={() => onDeleteProduct(prod)} className="p-3 bg-white text-slate-400 hover:text-red-600 hover:bg-red-50 border-2 border-slate-100 rounded-2xl shadow-sm transition-all hover:border-red-200 active:scale-90" title="Hapus Barang"><Trash className="w-4 h-4" /></button>
-                  </div>
-                </td>
+      {/* DATA PRODUK & STOK */}
+      <div className="bg-brand-card/60 backdrop-blur-2xl border border-brand-border rounded-[4rem] shadow-2xl shadow-black/5 overflow-hidden group/table relative z-10">
+        <div className="overflow-x-auto custom-scrollbar relative z-10">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-brand-bg/50 text-brand-muted border-b border-brand-border">
+                <th className="px-12 py-10 text-[10px] font-bold tracking-widest">Detail Barang</th>
+                <th className="px-10 py-10 text-[10px] font-bold tracking-widest text-center">Status Stok</th>
+                <th className="px-10 py-10 text-[10px] font-bold tracking-widest text-right">Harga Jual</th>
+                {isAdmin && <th className="px-10 py-10 text-[10px] font-bold tracking-widest text-right">Harga Beli</th>}
+                <th className="px-12 py-10 text-[10px] font-bold tracking-widest text-center">Tindakan</th>
               </tr>
-            ))}
-            {filteredProducts.length === 0 && (
-              <tr>
-                <td colSpan="8" className="p-20 text-center">
-                   <div className="flex flex-col items-center opacity-20">
-                      <Search className="w-16 h-16 mb-4"/>
-                      <p className="text-xl font-black uppercase tracking-[0.5em]">Barang Tidak Ditemukan</p>
-                   </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-brand-border/40">
+              {filteredProducts.map((p) => {
+                const isCritical = p.stock_pcs <= (p.low_stock_threshold || 10);
+                const isOut = p.stock_pcs <= 0;
+
+                return (
+                  <tr key={p.id} className="hover:bg-brand-primary/5 transition-all group/row">
+                    <td className="px-12 py-8">
+                      <div className="flex items-center gap-8">
+                        <div className={`w-16 h-16 rounded-[1.8rem] border-2 flex items-center justify-center group-hover/row:scale-110 group-hover/row:rotate-6 transition-all duration-500 shadow-inner ${isOut ? 'bg-brand-bg border-brand-border text-brand-muted' : isCritical ? 'bg-rose-500/10 border-rose-500/30 text-rose-500' : 'bg-brand-primary/10 border-brand-primary/30 text-brand-primary'}`}>
+                          <Box className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <p className={`font-bold text-lg tracking-tight transition-colors leading-none ${isOut ? 'text-brand-muted italic' : 'text-brand-text group-hover/row:text-brand-primary'}`}>{p.name}</p>
+                          <div className="flex items-center gap-4 mt-4">
+                             <div className="flex items-center gap-2 px-3 py-1 bg-brand-bg border border-brand-border rounded-lg shadow-sm">
+                                <Tag size={12} className="text-brand-primary opacity-60" /> 
+                                <span className="text-[10px] font-bold text-brand-muted tracking-wider">{p.sku}</span>
+                             </div>
+                             <span className="w-1.5 h-1.5 rounded-full bg-brand-border" />
+                             <span className="text-[10px] font-bold text-brand-primary tracking-widest opacity-80">{p.category}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-10 py-8 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className={`px-6 py-3 rounded-2xl text-sm font-bold tracking-widest border-2 transition-all shadow-xl shadow-black/5 ${isOut ? 'bg-brand-bg border-brand-border text-brand-muted opacity-40' : isCritical ? 'bg-rose-500/10 border-rose-500/40 text-rose-500 animate-pulse' : 'bg-brand-bg border-brand-border text-brand-text group-hover/row:border-brand-primary/40'}`}>
+                          {p.stock_pcs} <span className="text-[10px] opacity-60 ml-1">{p.unit || 'Pcs'}</span>
+                        </div>
+                        {isCritical && !isOut && (
+                          <div className="flex items-center gap-2 px-3 py-1 bg-rose-500/10 rounded-full border border-rose-500/20">
+                             <AlertTriangle className="w-3 h-3 text-rose-500" />
+                             <span className="text-[8px] font-bold text-rose-500 tracking-widest">Stok Menipis</span>
+                          </div>
+                        )}
+                        {isOut && (
+                          <div className="flex items-center gap-2 px-3 py-1 bg-brand-muted/10 rounded-full border border-brand-border">
+                             <XCircle className="w-3 h-3 text-brand-muted" />
+                             <span className="text-[8px] font-bold text-brand-muted tracking-widest">Stok Habis</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-10 py-8 text-right">
+                       <p className="text-[9px] font-bold text-brand-muted tracking-widest mb-2 opacity-50">Harga Jual</p>
+                       <p className="font-black text-xl text-brand-accent tracking-tighter leading-none group-hover/row:scale-110 transition-transform origin-right">{formatIDR(p.price_retail)}</p>
+                    </td>
+                    {isAdmin && (
+                      <td className="px-10 py-8 text-right">
+                        <p className="text-[9px] font-bold text-brand-muted tracking-widest mb-2 opacity-50">Harga Beli</p>
+                        <p className="font-black text-base text-brand-muted tracking-tighter leading-none opacity-60">{formatIDR(p.cost_price || 0)}</p>
+                      </td>
+                    )}
+                    <td className="px-12 py-8">
+                      <div className="flex items-center justify-center gap-4">
+                        <button 
+                          onClick={() => onPrintLabel?.(p)}
+                          className="w-12 h-12 rounded-2xl bg-brand-bg border border-brand-border text-brand-muted hover:text-brand-primary hover:border-brand-primary/40 transition-all shadow-sm flex items-center justify-center hover:shadow-xl active:scale-90"
+                          title="Generate/Cetak Barcode"
+                        >
+                          <Barcode className="w-5 h-5" />
+                        </button>
+                        {isAdmin && (
+                          <>
+                            <button 
+                              onClick={() => onUpdateProduct(p.id, p)}
+                              className="w-12 h-12 rounded-2xl bg-brand-bg border border-brand-border text-brand-muted hover:text-brand-primary hover:border-brand-primary/40 transition-all shadow-sm flex items-center justify-center hover:shadow-xl active:scale-90"
+                              title="Ubah Data Barang"
+                            >
+                              <Edit className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={() => onDeleteProduct(p)}
+                              className="w-12 h-12 rounded-2xl bg-brand-bg border border-brand-border text-brand-muted hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-sm flex items-center justify-center hover:shadow-xl active:scale-90"
+                              title="Hapus Barang"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
