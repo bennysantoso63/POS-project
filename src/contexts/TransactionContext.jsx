@@ -9,26 +9,11 @@ export function TransactionProvider({ children, fetchData }) {
   const { activeSession } = useSessionStore();
   const { currentUser } = useAuth();
   
-  const [cart, setCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem('lingling_active_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
-  
-  const [selectedCustomerId, setSelectedCustomerId] = useState(() => {
-    return localStorage.getItem('lingling_active_customer') || '';
-  });
+  const [cart, setCart] = useState([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
 
   const [receiptToPrint, setReceiptToPrint] = useState(null);
 
-  useEffect(() => {
-    localStorage.setItem('lingling_active_cart', JSON.stringify(cart));
-  }, [cart]);
-
-  useEffect(() => {
-    localStorage.setItem('lingling_active_customer', selectedCustomerId);
-  }, [selectedCustomerId]);
 
   const handleCheckout = useCallback(async (txData) => {
     if (!activeSession && currentUser?.role === 'cashier') {

@@ -1,0 +1,7 @@
+{
+  "name": "@pos-mandiri/core",
+  "version": "1.0.0",
+  "description": "Shared business logic — pure JS, zero platform dependency",
+  "main": "src/index.js",
+  "dependencies": {}
+}

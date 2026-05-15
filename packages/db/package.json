@@ -1,0 +1,7 @@
+{
+  "name": "@pos-mandiri/db",
+  "version": "1.0.0",
+  "description": "Shared DB schema and query patterns",
+  "main": "src/index.js",
+  "dependencies": {}
+}

@@ -35,7 +35,7 @@ function startBackgroundServices() {
     }, 5000); // Jeda 5 detik agar UI benar-benar stabil
 }
 
-const printerService = require('../src/utils/PrinterService.cjs');
+// const printerService = require('../src/utils/PrinterService.cjs'); // Removed duplicate require
 
 const waitForVite = (retries = 20) => {
     return new Promise((resolve, reject) => {
@@ -82,15 +82,28 @@ function createWindow() {
     } else {
         mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
+    
+    // 🔍 DEBUG: Lifecycle Monitors
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        console.error('[RENDERER] Load failed:', errorCode, errorDescription);
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+        mainWindow.show();
+    });
+
+    mainWindow.webContents.on('did-finish-load', () => {
+        console.log('[RENDERER] Load finished successfully');
+    });
+
+    mainWindow.webContents.on('dom-ready', () => {
+        console.log('[RENDERER] DOM ready');
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+    });
 
     // 🚀 PHASE 2: UI is ready to paint
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
         mainWindow.focus();
-        
-        if (isDev) {
-            mainWindow.webContents.openDevTools({ mode: 'detach' });
-        }
         
         // Load deferred logic after window is visible
         if (!isDeferredLogicLoaded) {
@@ -155,7 +168,7 @@ function bootDeferredLogic() {
     ipcMain.handle('api-close-session', async (e, d) => {
         const res = await sessions.closeSession(d.sessionId, d.closingCash, d.notes);
         if (res.success) {
-            try { await googleSyncQueries.uploadToDrive(); } catch (err) {}
+            try { await googleSyncQueries.uploadFileToGoogleDrive(); } catch (err) {}
         }
         return res;
     });
@@ -181,9 +194,16 @@ function bootDeferredLogic() {
 
     // 🔄 SYNC & EXCEL
     ipcMain.handle('sync:googleLogin', () => googleSyncQueries.googleLogin());
-    ipcMain.handle('sync:dryRunExcel', (_, path) => excelSyncQueries.dryRunExcel(path));
-    ipcMain.handle('sync:commitExcel', (_, data, platform) => excelSyncQueries.commitExcel(data, platform));
-    ipcMain.handle('sync:getDriveSyncStatus', () => googleSyncQueries.getDriveSyncStatus());
+    ipcMain.handle('sync:dryRunExcel', (_, path) => excelSyncQueries.parseExcelDryRun(path));
+    ipcMain.handle('sync:commitExcel', (_, data, platform) => excelSyncQueries.commitExcelSync(data, platform));
+    ipcMain.handle('sync:uploadToDrive', (_, filePath, fileName) =>
+        googleSyncQueries.uploadFileToGoogleDrive(filePath, fileName)
+    );
+    ipcMain.handle('sync:getDriveSyncStatus', () => 
+        googleSyncQueries.getDriveSyncStatus 
+            ? googleSyncQueries.getDriveSyncStatus() 
+            : { connected: false }
+    );
 
     // ⚙️ SETTINGS & HARDWARE
     ipcMain.handle('api-get-settings', () => {

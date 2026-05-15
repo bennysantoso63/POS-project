@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Terminal, Cloud, Bell, Search, Monitor, BarChart, 
-  Box, Power, CloudUpload, Clock, ShieldCheck, Zap
+  Box, Power, Clock, ShieldCheck, Zap
 } from 'lucide-react';
 
 export default function CockpitLayout({ children, userRole, terminalName, onTabChange }) {
@@ -222,7 +222,7 @@ export default function CockpitLayout({ children, userRole, terminalName, onTabC
                    className="w-full text-left px-5 py-4 rounded-[1.5rem] flex items-center gap-4 hover:bg-brand-primary/10 text-brand-muted hover:text-brand-primary transition-all group border border-transparent hover:border-brand-primary/20"
                 >
                   <div className="p-2 bg-brand-bg rounded-xl border border-brand-border group-hover:border-brand-primary/30">
-                    <CloudUpload size={18} className="opacity-50" />
+                    <Cloud size={18} className="opacity-50" />
                   </div>
                   <span className="font-black text-sm tracking-tight">Paksa Sinkronisasi Cloud</span>
                 </button>

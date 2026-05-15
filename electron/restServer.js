@@ -1,13 +1,13 @@
 const express = require('express');
 const cors = require('cors');
-const db = require('../src/db/db.js');
+const db = require('../src/db/db.cjs');
 
 // Import Query existing
-const auth = require('../src/db/queries/auth');
-const products = require('../src/db/queries/products');
-const sessions = require('../src/db/queries/sessions');
-const heldBills = require('../src/db/queries/heldBills');
-const transactions = require('../src/db/queries/transactions');
+const auth = require('../src/db/queries/auth.cjs');
+const products = require('../src/db/queries/products.cjs');
+const sessions = require('../src/db/queries/sessions.cjs');
+const heldBills = require('../src/db/queries/heldBills.cjs');
+const transactions = require('../src/db/queries/transactions.cjs');
 
 const server = express();
 server.use(cors());

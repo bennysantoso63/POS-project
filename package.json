@@ -60,6 +60,7 @@
       "dist/**/*",
       "electron/**/*",
       "src/db/**/*",
+      "src/utils/**/*",
       "package.json"
     ],
     "asar": true,

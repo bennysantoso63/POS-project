@@ -1,3 +1,4 @@
+const log = require('electron-log');
 // const Database = require('better-sqlite3'); // REMOVED: Using centralized db.cjs
 
 /**
@@ -15,83 +16,68 @@ class LingLingDataScience {
 
   // 1. ALGORITMA APRIORI (Cross-Selling Suggestions)
   // Mencari produk yang paling sering dibeli bersamaan dengan item di keranjang.
-  getCrossSellRecommendations(cartBarcodes) {
-    if (!cartBarcodes || cartBarcodes.length === 0) return [];
-
-    const triggerBarcode = cartBarcodes[cartBarcodes.length - 1];
-
+  getCrossSellRecommendations(productId) {
+    if (!productId) return [];
     try {
-      const query = this.db.prepare(`
-        SELECT 
-            t2.product_barcode, 
-            p.name, 
-            COUNT(t2.transaction_id) as frequency 
-        FROM Transaction_Items t1
-        JOIN Transaction_Items t2 ON t1.transaction_id = t2.transaction_id
-        JOIN Products p ON t2.product_barcode = p.barcode
-        WHERE t1.product_barcode = ? 
-          AND t2.product_barcode != ?
-        GROUP BY t2.product_barcode
-        ORDER BY frequency DESC
-        LIMIT 3
-      `);
-
-      return query.all(triggerBarcode, triggerBarcode);
+        const query = this.db.prepare(`
+            SELECT
+                t2.product_id,
+                p.name,
+                COUNT(t2.transaction_id) as frequency
+            FROM transaction_items t1
+            JOIN transaction_items t2
+                ON t1.transaction_id = t2.transaction_id
+            JOIN products p ON t2.product_id = p.id
+            WHERE t1.product_id = ?
+              AND t2.product_id != ?
+            GROUP BY t2.product_id
+            ORDER BY frequency DESC
+            LIMIT 3
+        `);
+        return query.all(productId, productId);
     } catch (error) {
-      console.error("Ling-Ling Apriori Error:", error);
-      return [];
+        console.error("Ling-Ling Apriori Error:", error);
+        return [];
     }
   }
 
   // 2. ALGORITMA PREDIKSI STOK LUNAR (Lunar Burn-Rate)
   // Menghitung sisa hari stok dengan mempertimbangkan intensitas ritual lunar.
-  calculateLunarBurnRate(barcode, lookaheadDays = 7) {
+  calculateLunarBurnRate(productId, lookaheadDays = 7) {
     try {
-      // A. Rata-rata penjualan harian (30 hari terakhir)
-      const salesQuery = this.db.prepare(`
-        SELECT SUM(quantity) as total_sold
-        FROM Transaction_Items ti
-        JOIN Sales_Facts sf ON ti.transaction_id = sf.transaction_id
-        WHERE ti.product_barcode = ?
-          AND date(sf.date_id) >= date('now', '-30 days')
-      `);
-      const salesData = salesQuery.get(barcode);
-      const averageDailySales = (salesData.total_sold || 0) / 30;
+        const salesQuery = this.db.prepare(`
+            SELECT COALESCE(SUM(ti.qty), 0) as total_sold
+            FROM transaction_items ti
+            JOIN transactions t ON ti.transaction_id = t.id
+            WHERE ti.product_id = ?
+              AND t.status = 'completed'
+              AND date(t.created_at) >= date('now', '-30 days')
+        `);
+        const salesData = salesQuery.get(productId);
+        const averageDailySales = (salesData.total_sold || 0) / 30;
+        if (averageDailySales === 0) return { status: 'Aman', days_left: 999 };
 
-      if (averageDailySales === 0) return { status: 'Aman', days_left: 999 };
+        const stockQuery = this.db.prepare(
+            `SELECT stock_pcs, name FROM products WHERE id = ?`
+        );
+        const product = stockQuery.get(productId);
+        if (!product) return null;
 
-      // B. Intensitas Ritual Lunar (Multiplier)
-      const lunarQuery = this.db.prepare(`
-        SELECT AVG(intensity_score) as avg_intensity
-        FROM Dim_Date_Lunar
-        WHERE date(gregorian_date) BETWEEN date('now') AND date('now', '+' || ? || ' days')
-      `);
-      const lunarData = lunarQuery.get(lookaheadDays);
-      const intensityMultiplier = lunarData.avg_intensity || 1;
+        const daysLeft = Math.floor(product.stock_pcs / averageDailySales);
+        let status = 'Aman';
+        if (daysLeft <= 3) status = 'Kritis';
+        else if (daysLeft <= 7) status = 'Waspada';
 
-      // C. Stok Saat Ini
-      const stockQuery = this.db.prepare(`SELECT stock_level, name FROM Products WHERE barcode = ?`);
-      const product = stockQuery.get(barcode);
-
-      // D. Kalkulasi Sisa Hari (Adjusted Burn Rate)
-      const adjustedDailyBurn = averageDailySales * intensityMultiplier;
-      const daysLeft = Math.floor(product.stock_level / adjustedDailyBurn);
-
-      let status = 'Aman';
-      if (daysLeft <= 3) status = 'Kritis';
-      else if (daysLeft <= 7) status = 'Waspada';
-
-      return {
-        product_name: product.name,
-        current_stock: product.stock_level,
-        adjusted_burn_rate: adjustedDailyBurn.toFixed(2),
-        days_left: daysLeft,
-        status: status
-      };
-
+        return {
+            product_name       : product.name,
+            current_stock      : product.stock_pcs,
+            adjusted_burn_rate : averageDailySales.toFixed(2),
+            days_left          : daysLeft,
+            status,
+        };
     } catch (error) {
-      console.error("Ling-Ling Burn-Rate Error:", error);
-      return null;
+        console.error("Ling-Ling Burn-Rate Error:", error);
+        return null;
     }
   }
 
@@ -99,18 +85,6 @@ class LingLingDataScience {
   // Menghitung skor loyalitas pelanggan berdasarkan data historis.
   async recalculateRFM() {
     try {
-      // Inisialisasi tabel rfm jika belum ada
-      this.db.exec(`
-        CREATE TABLE IF NOT EXISTS customer_rfm (
-          customer_id INTEGER PRIMARY KEY,
-          recency INTEGER,
-          frequency INTEGER,
-          monetary REAL,
-          segment TEXT,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-
       // Logika RFM Sederhana: Agregasi data transaksi
       const rfmData = this.db.prepare(`
         SELECT 
@@ -124,17 +98,36 @@ class LingLingDataScience {
       `).all();
 
       const insertRfm = this.db.prepare(`
-        INSERT OR REPLACE INTO customer_rfm (customer_id, recency, frequency, monetary, segment)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO customer_rfm
+        (customer_id, recency_days, frequency, monetary, rfm_score, rfm_label, computed_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now','localtime'))
       `);
 
       this.db.transaction(() => {
         for (const row of rfmData) {
-          let segment = 'Reguler';
-          if (row.frequency > 5 && row.monetary > 1000000) segment = 'Loyal';
-          if (row.recency > 30) segment = 'Hibernating';
-          
-          insertRfm.run(row.customer_id, Math.floor(row.recency), row.frequency, row.monetary, segment);
+          // Simple Scoring Normalization (Base 0-5 for calculation)
+          const rScore = row.recency < 7 ? 5 : row.recency < 14 ? 4 : row.recency < 30 ? 3 : row.recency < 90 ? 2 : 1;
+          const fScore = row.frequency > 10 ? 5 : row.frequency > 5 ? 4 : row.frequency > 2 ? 3 : 2;
+          const mScore = row.monetary > 2000000 ? 5 : row.monetary > 1000000 ? 4 : row.monetary > 500000 ? 3 : 2;
+
+          // Hitung rfm_score dari R, F, M yang sudah dinormalisasi (Weighting: 30%, 30%, 40%)
+          const rfmScore = (rScore * 0.3 + fScore * 0.3 + mScore * 0.4) * 20;
+
+          let rfmLabel;
+          if (rfmScore >= 80)                              rfmLabel = 'vip';
+          else if (rfmScore >= 60)                         rfmLabel = 'loyal';
+          else if (rfmScore >= 40)                         rfmLabel = 'potential';
+          else if (row.recency < 90 && rfmScore < 40)      rfmLabel = 'at_risk';
+          else                                             rfmLabel = 'churned';
+
+          insertRfm.run(
+            row.customer_id,
+            Math.floor(row.recency),
+            row.frequency,
+            row.monetary,
+            Math.round(rfmScore),
+            rfmLabel
+          );
         }
       })();
 
@@ -156,7 +149,7 @@ class LingLingDataScience {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           primary_item_id INTEGER,
           secondary_item_id INTEGER,
-          confidence REAL,
+          confidence_pct INTEGER,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -177,11 +170,11 @@ class LingLingDataScience {
       `).all();
 
       this.db.prepare("DELETE FROM apriori_rules").run();
-      const insertRule = this.db.prepare("INSERT INTO apriori_rules (primary_item_id, secondary_item_id, confidence) VALUES (?, ?, ?)");
+      const insertRule = this.db.prepare("INSERT INTO apriori_rules (primary_item_id, secondary_item_id, confidence_pct) VALUES (?, ?, ?)");
 
       this.db.transaction(() => {
         for (const rule of rules) {
-          insertRule.run(rule.primary_id, rule.secondary_id, 0.85); // Dummy confidence for POC
+          insertRule.run(rule.primary_id, rule.secondary_id, 85); // Dummy confidence for POC
         }
       })();
 
@@ -218,6 +211,5 @@ class LingLingDataScience {
   }
 }
 
-// Global logger helper
-const log = require('electron-log');
+
 module.exports = new LingLingDataScience();

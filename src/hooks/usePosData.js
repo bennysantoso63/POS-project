@@ -21,7 +21,7 @@ export function usePosData() {
   };
 
   const fetchData = useCallback(async () => {
-    if (!window.api) {
+    if (!window.api || typeof window.api.getProducts !== 'function') {
       setIsLoading(false);
       return;
     }

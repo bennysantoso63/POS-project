@@ -18,8 +18,8 @@ export default function LoginView({ onLogin, error: externalError }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (pin.length < 4) {
-      setError('PIN Salah / Kurang dari 4 Digit');
+    if (pin.length < 1) {
+      setError('PIN Tidak Boleh Kosong');
       triggerShake();
       return;
     }
@@ -114,9 +114,9 @@ export default function LoginView({ onLogin, error: externalError }) {
                   <input 
                     type="password" 
                     value={pin}
-                    onChange={(e) => { setPin(e.target.value.replace(/\D/g, '')); setError(''); }}
+                    onChange={(e) => { setPin(e.target.value); setError(''); }}
                     placeholder="••••" 
-                    maxLength={6}
+                    maxLength={12}
                     className="w-full bg-transparent border-b-2 border-brand-border pb-4 text-brand-text text-center tracking-[1em] text-5xl font-black focus:outline-none focus:border-brand-primary transition-all duration-1000 placeholder:opacity-[0.03] group-hover/input:border-brand-muted/40 selection:bg-brand-primary/20"
                     autoFocus
                   />

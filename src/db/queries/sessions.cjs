@@ -121,9 +121,9 @@ function closeSession(sessionId, closingCash, notes = '') {
         // [T5] Log Anomaly if Gap exists
         if (cashDifference !== 0) {
             db.prepare(`
-                INSERT INTO void_anomaly_log (session_id, type, amount, reason)
-                VALUES (?, ?, ?, ?)
-            `).run(sessionId, 'RECON_GAP', cashDifference, notes || 'Auto-logged reconciliation gap');
+                INSERT INTO void_anomaly_log (session_id, reason, gap_amount)
+                VALUES (?, ?, ?)
+            `).run(sessionId, notes || 'Auto-logged reconciliation gap', cashDifference);
         }
 
         log.info(`Session closed: ID ${sessionId}, Diff: ${cashDifference}`);
@@ -180,9 +180,9 @@ const closeBlindSession = (sessionId, inputCash) => {
     // Log Anomali jika ada selisih
     if (!isMatch) {
       db.prepare(`
-        INSERT INTO void_anomaly_log (session_id, type, amount, reason) 
-        VALUES (?, ?, ?, ?)
-      `).run(sessionId, 'RECON_GAP', difference, difference > 0 ? 'Surplus kas fisik' : 'Kekurangan kas fisik');
+        INSERT INTO void_anomaly_log (session_id, reason, gap_amount) 
+        VALUES (?, ?, ?)
+      `).run(sessionId, difference > 0 ? 'Surplus kas fisik' : 'Kekurangan kas fisik', difference);
     }
 
     // Hitung total sales

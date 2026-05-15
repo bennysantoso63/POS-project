@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand-bg: #141E30;
+    --brand-card: #1e293b;
+    --brand-primary: #4F46E5;
+    --brand-secondary: #6366F1;
+    --brand-text: #ffffff;
+    --brand-border: rgba(255, 255, 255, 0.1);
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--brand-bg);
+  color: var(--brand-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+@layer components {
+  .card-premium {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--brand-border);
+    border-radius: 2rem;
+  }
+}

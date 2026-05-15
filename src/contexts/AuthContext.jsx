@@ -11,8 +11,12 @@ export function AuthProvider({ children }) {
   const { clearSession } = useSessionStore();
 
   const checkSetup = useCallback(async () => {
+    if (!window.api || typeof window.api.checkSetup !== 'function') {
+      setIsLoading(false);
+      return;
+    }
     try {
-      const res = await window.api?.checkSetup();
+      const res = await window.api.checkSetup();
       setNeedsSetup(res);
     } catch (err) {
       console.error("Setup Check Error:", err);
@@ -21,7 +25,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (pin) => {
+  const login = useCallback(async (pin) => {
     const res = await window.api?.login(pin);
     if (res?.success) {
       setCurrentUser(res.user);
@@ -31,7 +35,7 @@ export function AuthProvider({ children }) {
       toast.error(res.error || "PIN Salah!");
       return { success: false, error: res.error };
     }
-  };
+  }, []);
 
   const logout = useCallback(() => {
     if (window.confirm("Apakah Anda yakin ingin keluar?")) {

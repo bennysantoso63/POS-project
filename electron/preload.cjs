@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld('api', {
     checkSetup: () => ipcRenderer.invoke('api-check-setup'),
     setupAdmin: (data) => ipcRenderer.invoke('api-setup-admin', data),
     login: (pin) => ipcRenderer.invoke('api-login', pin),
-    logout: () => ipcRenderer.invoke('api-logout'),
+
     getUsers: () => ipcRenderer.invoke('api-get-users'),
 
     // MASTER DATA (Standardized)
@@ -58,7 +58,9 @@ contextBridge.exposeInMainWorld('api', {
     sync: {
       googleLogin: () => ipcRenderer.invoke('sync:googleLogin'),
       dryRunExcel: (filePath) => ipcRenderer.invoke('sync:dryRunExcel', filePath),
-      commitExcel: (data, platform) => ipcRenderer.invoke('sync:commitExcel', data, platform)
+      commitExcel: (data, platform) => ipcRenderer.invoke('sync:commitExcel', data, platform),
+      uploadToDrive: (filePath, fileName) => ipcRenderer.invoke('sync:uploadToDrive', filePath, fileName),
+      getDriveSyncStatus: () => ipcRenderer.invoke('sync:getDriveSyncStatus')
     },
 
     // SETTINGS & HARDWARE

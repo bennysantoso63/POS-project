@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name"   : "POS Mandiri",
+    "slug"   : "pos-mandiri",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon"   : "./assets/icon.png",
+    "splash" : {
+      "image"          : "./assets/splash.png",
+      "resizeMode"     : "contain",
+      "backgroundColor": "#141E30"
+    },
+    "android": {
+      "package"    : "com.posmandiri.app",
+      "permissions": [
+        "CAMERA",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_WIFI_STATE",
+        "ACCESS_NETWORK_STATE",
+        "INTERNET"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.posmandiri.app",
+      "infoPlist": {
+        "NSCameraUsageDescription"    : "Untuk scan barcode produk",
+        "NSBluetoothAlwaysUsageDescription": "Untuk print nota ke printer thermal"
+      }
+    },
+    "plugins": [
+      "expo-camera",
+      ["expo-sqlite", { "enableFTS": true }]
+    ]
+  }
+}

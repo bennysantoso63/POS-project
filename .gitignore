@@ -1,60 +1,50 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+﻿# Dependencies
+node_modules/
+apps/mobile/node_modules/
+packages/*/node_modules/
 
-node_modules
-dist
-dist-ssr
+# Database
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Build output
+dist/
 release/
 out/
+build/
+
+# Electron builder
 *.exe
 *.dmg
 *.AppImage
 *.deb
 *.snap
-*.local
+*.msi
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
 
-velora.key
-velora.key.pub
+# Vite
+.vite/
 
-# Database
-*.db
-*.db-journal
-src/db/pos_offline.db
-pos_mandiri.db
+# EAS (mobile build)
+.expo/
+android/
+ios/
 
-# Environment
-.env
-.env.*
-!.env.example
-
-# AI & Audit Artifacts (Safe Guard)
-audit_report.md
-.gemini/
-brain/
-scratch/
-!scratch/barcode-sistem/
-
-# Project Specific Ignored
-recovery_snapshot/
-graphify-out/
-.agents/
-apps/
-legacy_archive/
-packages/
+# Temp
+*.tmp
+*.temp
