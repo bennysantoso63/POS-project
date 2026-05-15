@@ -138,6 +138,7 @@ function bootDeferredLogic() {
     // const sembahyangQueries = require('../src/db/queries/sembahyang.cjs'); // DEPRECATED: Consolidated into dsEngine
     const printerService = require('../src/utils/PrinterService.cjs');
     const dsEngine = require('./LingLingDataScience.js');
+    const sembahyang = require('../src/db/queries/sembahyang.cjs');
 
     // 📦 PRODUCTS & CATEGORIES
     ipcMain.handle('api-get-products', () => products.getProducts());
@@ -187,6 +188,23 @@ function bootDeferredLogic() {
     });
     ipcMain.handle('sembahyang:getBundlingSuggestion', (_, id) => dsEngine.getBundlingSuggestion(id));
     ipcMain.handle('sembahyang:closeBlindSession', (_, sid, cash) => sessions.closeBlindSession(sid, cash));
+    
+    // New Sembahyang Handlers
+    ipcMain.handle('sembahyang:get-anchor-items', () => sembahyang.getAnchorItems());
+    ipcMain.handle('sembahyang:get-lunar-date', () => sembahyang.getLunarDate());
+    ipcMain.handle('sembahyang:get-credit-score', (e, id) => sembahyang.getCustomerCreditScore(id));
+    ipcMain.handle('sembahyang:get-seasonal-alerts', () => sembahyang.getSeasonalMarkdownAlerts());
+    ipcMain.handle('sembahyang:get-void-anomaly', (e, sid) => sembahyang.getVoidAnomalyForSession(sid));
+    ipcMain.handle('sembahyang:get-burnrate-alerts', () => sembahyang.getBurnrateAlerts());
+    ipcMain.handle('sembahyang:get-bundling', (e, pid) => sembahyang.getBundlingSuggestions(pid));
+    ipcMain.handle('sembahyang:get-rfm-profile', (e, cid) => sembahyang.getCustomerRFMProfile(cid));
+    ipcMain.handle('sembahyang:get-rfm-summary', () => sembahyang.getRFMSummary());
+    ipcMain.handle('sembahyang:compute-all', () => {
+        sembahyang.computeAndSetAnchorItems();
+        sembahyang.computeBurnratePredictions();
+        return { success: true };
+    });
+
 
     // 🤖 LING-LING DATA SCIENCE (REAL-TIME ENGINE)
     ipcMain.handle('ds:get-recommendations', (_, barcodes) => dsEngine.getCrossSellRecommendations(barcodes));

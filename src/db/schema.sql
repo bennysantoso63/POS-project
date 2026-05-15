@@ -46,6 +46,11 @@ CREATE TABLE IF NOT EXISTS products (
     uom_box_multiplier INTEGER DEFAULT 1,
     low_stock_threshold INTEGER DEFAULT 5,
     last_sold_at DATETIME,
+    -- [SEMBAHYANG] Metadata
+    is_anchor_item INTEGER NOT NULL DEFAULT 0,
+    margin_target_pct REAL,
+    event_tag TEXT,
+    event_end_date TEXT,
     created_at DATETIME DEFAULT (datetime('now', 'localtime'))
 );
 
@@ -241,4 +246,50 @@ CREATE TABLE IF NOT EXISTS Knowledge_Vectors (
     chunk_text TEXT NOT NULL,
     embedding_json TEXT NOT NULL
 );
+
+-- 11. SEMBAHYANG INTELLIGENCE (Analytics & Predictions)
+CREATE TABLE IF NOT EXISTS apriori_rules (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_a_id       INTEGER NOT NULL REFERENCES products(id),
+    item_b_id       INTEGER NOT NULL REFERENCES products(id),
+    support         REAL NOT NULL DEFAULT 0.0,
+    confidence_pct  INTEGER NOT NULL,
+    lift            REAL NOT NULL DEFAULT 1.0,
+    computed_at     TEXT DEFAULT (datetime('now','localtime')),
+    CHECK(item_a_id != item_b_id)
+);
+
+CREATE TABLE IF NOT EXISTS customer_rfm (
+    customer_id  INTEGER PRIMARY KEY REFERENCES customers(id),
+    recency_days INTEGER NOT NULL,
+    frequency    INTEGER NOT NULL,
+    monetary     INTEGER NOT NULL,
+    rfm_score    REAL NOT NULL,
+    rfm_label    TEXT NOT NULL CHECK(rfm_label IN ('vip','loyal','potential','at_risk','churned')),
+    computed_at  TEXT DEFAULT (datetime('now','localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS burnrate_predictions (
+    id                        INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id               INTEGER NOT NULL REFERENCES customers(id),
+    product_id                INTEGER NOT NULL REFERENCES products(id),
+    avg_days_between_purchase REAL NOT NULL,
+    last_purchase_date        TEXT NOT NULL,
+    predicted_next_purchase   TEXT NOT NULL,
+    days_until_stockout       INTEGER NOT NULL,
+    computed_at               TEXT DEFAULT (datetime('now','localtime')),
+    UNIQUE(customer_id, product_id)
+);
+
+CREATE TABLE IF NOT EXISTS void_anomaly_log (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    cashier_session_id INTEGER NOT NULL REFERENCES cashier_sessions(id),
+    user_id            INTEGER REFERENCES users(id),
+    void_count         INTEGER NOT NULL,
+    void_total_value   INTEGER NOT NULL,
+    anomaly_flag       INTEGER NOT NULL DEFAULT 0,
+    threshold_used     INTEGER NOT NULL,
+    created_at         TEXT DEFAULT (datetime('now','localtime'))
+);
+
 

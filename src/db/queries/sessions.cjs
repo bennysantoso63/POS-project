@@ -27,6 +27,15 @@ function openSession(openingCash) {
         const stmt = db.prepare('INSERT INTO cashier_sessions (opening_cash) VALUES (?)');
         const result = stmt.run(openingCash);
         log.info(`Session opened with cash: ${openingCash}`);
+
+        // Sembahyang startup jobs — fire and forget
+        try {
+            const sembahyang = require('./sembahyang.cjs');
+            sembahyang.runSembahyangStartupJobs();
+        } catch (e) {
+            log.error(`Sembahyang startup jobs failed: ${e.message}`);
+        }
+
         return { success: true, id: result.lastInsertRowid };
     } catch (err) {
         log.error(`openSession failed: ${err.message}`);

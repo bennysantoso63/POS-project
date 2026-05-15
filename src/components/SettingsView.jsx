@@ -270,9 +270,55 @@ export default function SettingsView({
                       ]} 
                       label="Jenis Bisnis"
                     />
+                    
+                    {safeConfig.business_type === 'sembahyang' && (
+                        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                            <div className="space-y-4">
+                                <label className="text-[9px] font-black tracking-widest text-brand-primary uppercase">Threshold Anomali Void</label>
+                                <input 
+                                    type="number" 
+                                    name="sembahyang_void_anomaly_threshold" 
+                                    value={safeConfig.sembahyang_void_anomaly_threshold || 5} 
+                                    onChange={handleChange} 
+                                    className="w-full bg-white/40 dark:bg-white/5 border border-brand-border rounded-xl py-3 px-6 text-xs font-bold text-brand-text"
+                                />
+                            </div>
+                            <div className="space-y-4">
+                                <label className="text-[9px] font-black tracking-widest text-brand-primary uppercase">Jangkauan Prediksi Stok (Hari)</label>
+                                <input 
+                                    type="number" 
+                                    name="sembahyang_burnrate_days_ahead" 
+                                    value={safeConfig.sembahyang_burnrate_days_ahead || 2} 
+                                    onChange={handleChange} 
+                                    className="w-full bg-white/40 dark:bg-white/5 border border-brand-border rounded-xl py-3 px-6 text-xs font-bold text-brand-text"
+                                />
+                            </div>
+                            <div className="space-y-4">
+                                <label className="text-[9px] font-black tracking-widest text-brand-primary uppercase">Jumlah Produk KVI (Anchor)</label>
+                                <input 
+                                    type="number" 
+                                    name="sembahyang_anchor_item_count" 
+                                    value={safeConfig.sembahyang_anchor_item_count || 10} 
+                                    onChange={handleChange} 
+                                    className="w-full bg-white/40 dark:bg-white/5 border border-brand-border rounded-xl py-3 px-6 text-xs font-bold text-brand-text"
+                                />
+                            </div>
+                            <div className="flex items-center gap-4 pt-4">
+                                <div className="flex-1">
+                                    <p className="text-[9px] font-bold text-brand-muted tracking-tight">Status Lunar & Kalender Ritual Aktif</p>
+                                </div>
+                                <div className={`w-10 h-5 rounded-full relative transition-all cursor-pointer ${safeConfig.sembahyang_lunar_display === '1' ? 'bg-brand-primary' : 'bg-slate-700'}`}
+                                    onClick={() => handleChange({ target: { name: 'sembahyang_lunar_display', value: safeConfig.sembahyang_lunar_display === '1' ? '0' : '1' } })}>
+                                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${safeConfig.sembahyang_lunar_display === '1' ? 'left-6' : 'left-1'}`}></div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <p className="text-[9px] font-bold text-brand-muted tracking-widest mt-4 opacity-50 leading-relaxed">
                        Mengaktifkan fitur khusus Kalender Lunar, Apriori Bundling, dan Radar Kasbon Vihara. Memerlukan restart modul untuk sinkronisasi data.
                     </p>
+                  </div>
                  </div>
               </div>
             </div>

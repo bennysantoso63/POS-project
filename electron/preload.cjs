@@ -46,7 +46,19 @@ contextBridge.exposeInMainWorld('api', {
     // SEMBAHYANG & DS ENGINE
     sembahyang: {
       getBundlingSuggestion: (itemId) => ipcRenderer.invoke('sembahyang:getBundlingSuggestion', itemId),
-      closeBlindSession: (sessionId, inputCash) => ipcRenderer.invoke('sembahyang:closeBlindSession', sessionId, inputCash)
+      closeBlindSession: (sessionId, inputCash) => ipcRenderer.invoke('sembahyang:closeBlindSession', sessionId, inputCash),
+      
+      // New Sembahyang APIs
+      getAnchorItems    : () => ipcRenderer.invoke('sembahyang:get-anchor-items'),
+      getLunarDate      : () => ipcRenderer.invoke('sembahyang:get-lunar-date'),
+      getCreditScore    : (id)  => ipcRenderer.invoke('sembahyang:get-credit-score', id),
+      getSeasonalAlerts : () => ipcRenderer.invoke('sembahyang:get-seasonal-alerts'),
+      getVoidAnomaly    : (sid) => ipcRenderer.invoke('sembahyang:get-void-anomaly', sid),
+      getBurnrateAlerts : () => ipcRenderer.invoke('sembahyang:get-burnrate-alerts'),
+      getBundling       : (pid) => ipcRenderer.invoke('sembahyang:get-bundling', pid),
+      getRFMProfile     : (cid) => ipcRenderer.invoke('sembahyang:get-rfm-profile', cid),
+      getRFMSummary     : () => ipcRenderer.invoke('sembahyang:get-rfm-summary'),
+      computeAll        : () => ipcRenderer.invoke('sembahyang:compute-all'),
     },
     
     ds: {
