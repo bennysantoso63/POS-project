@@ -160,9 +160,9 @@ function bootDeferredLogic() {
     ipcMain.handle('api-delete-held-bill', (e, id) => heldBills.deleteHeldBill(id));
 
     // 👥 CRM & SUPPLIERS
-    ipcMain.handle('api-get-customers', () => customers.getCustomers());
+    ipcMain.handle('api-get-customers', () => customers.getAllCustomers());
     ipcMain.handle('api-add-customer', (e, d) => customers.createCustomer(d));
-    ipcMain.handle('api-get-suppliers', () => suppliers.getSuppliers());
+    ipcMain.handle('api-get-suppliers', () => suppliers.getAllSuppliers());
 
     // 🕒 SESSIONS & AUTO-BACKUP
     ipcMain.handle('api-open-session', (e, cash) => sessions.openSession(cash));

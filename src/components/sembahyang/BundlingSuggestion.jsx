@@ -21,15 +21,15 @@ export function BundlingSuggestion({ suggestions = [], onAddToCart }) {
 
             <div className="flex flex-col gap-3 relative z-10">
                 {suggestions.map(s => (
-                    <div key={s.id || s.item_b_id}
+                    <div key={s.id ?? s.item_b_id}
                         className="flex items-center justify-between p-4 bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/60 dark:hover:bg-white/10 transition-all group/item">
                         <div className="flex-1">
                             <p className="text-xs font-bold text-brand-text mb-0.5">
-                                {s.suggested_product_name || s.name}
+                                {s.suggested_product_name ?? s.name}
                             </p>
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-bold text-brand-primary">
-                                    Rp {(s.suggested_product_price || s.price_retail).toLocaleString('id-ID')}
+                                    Rp {((s.suggested_product_price ?? s.price_retail) ?? 0).toLocaleString('id-ID')}
                                 </span>
                                 <span className="text-[9px] font-bold text-brand-muted opacity-50 tracking-tighter">
                                     ({s.confidence_pct}% Match)
@@ -38,10 +38,10 @@ export function BundlingSuggestion({ suggestions = [], onAddToCart }) {
                         </div>
                         <button
                             onClick={() => onAddToCart({
-                                id: s.item_b_id || s.id,
-                                name: s.suggested_product_name || s.name,
-                                price_retail: s.suggested_product_price || s.price_retail,
-                                stock_pcs: s.stock_qty || s.stock_pcs
+                                id: s.item_b_id ?? s.id,
+                                name: s.suggested_product_name ?? s.name,
+                                price_retail: s.suggested_product_price ?? s.price_retail ?? 0,
+                                stock_pcs: s.stock_qty ?? s.stock_pcs ?? 0
                             })}
                             className="w-10 h-10 bg-brand-primary text-white rounded-xl flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
                         >
