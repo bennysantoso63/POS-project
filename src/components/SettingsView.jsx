@@ -319,8 +319,7 @@ export default function SettingsView({
                        Mengaktifkan fitur khusus Kalender Lunar, Apriori Bundling, dan Radar Kasbon Vihara. Memerlukan restart modul untuk sinkronisasi data.
                     </p>
                   </div>
-                 </div>
-              </div>
+               </div>
             </div>
           </div>
 
