@@ -18,6 +18,18 @@ contextBridge.exposeInMainWorld('api', {
     addCustomer: (data) => ipcRenderer.invoke('api-add-customer', data),
     getSuppliers: () => ipcRenderer.invoke('api-get-suppliers'),
 
+    // PURCHASING
+    getPurchaseOrders: (filters) => ipcRenderer.invoke('api-get-purchase-orders', filters),
+    createPO: (data) => ipcRenderer.invoke('api-create-po', data),
+    receivePO: (id) => ipcRenderer.invoke('api-receive-po', id),
+    payPO: (id, amount, sessionId) => ipcRenderer.invoke('api-pay-po', id, amount, sessionId),
+
+    // EXPENSES, RECEIVABLES & MOVEMENTS
+    recordExpense: (data) => ipcRenderer.invoke('api-record-expense', data),
+    recordPayment: (id, data, sessionId) => ipcRenderer.invoke('api-record-payment', id, data, sessionId),
+    getMovements: (productId) => ipcRenderer.invoke('api-get-movements', productId),
+    applyAdjustments: (items, userId) => ipcRenderer.invoke('api-apply-adjustments', items, userId),
+
     // TRANSAKSI & HISTORY
     processCheckout: (data) => ipcRenderer.invoke('api-process-checkout', data),
     getTransactions: (filters) => ipcRenderer.invoke('api-get-transactions', filters),

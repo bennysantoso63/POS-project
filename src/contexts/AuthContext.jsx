@@ -26,14 +26,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (pin) => {
-    const res = await window.api?.login(pin);
-    if (res?.success) {
-      setCurrentUser(res.user);
-      toast.success(`Selamat datang, ${res.user.username}`);
-      return { success: true, user: res.user };
-    } else {
-      toast.error(res.error || "PIN Salah!");
-      return { success: false, error: res.error };
+    try {
+      const res = await window.api?.login(pin);
+      if (res?.success) {
+        setCurrentUser(res.user);
+        toast.success(`Selamat datang, ${res.user.username}`);
+        return { success: true, user: res.user };
+      } else {
+        const errorMsg = res?.error || "PIN Salah!";
+        toast.error(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+    } catch (err) {
+      console.error('[AuthContext] Login IPC Error:', err);
+      const errorMsg = err?.message || 'Koneksi ke server gagal.';
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
     }
   }, []);
 

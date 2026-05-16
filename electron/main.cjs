@@ -116,7 +116,17 @@ function registerCriticalHandlers() {
     // 🛡️ TIER 1: Handlers needed for login/setup (Must be ready before loadFile)
     ipcMain.handle('api-check-setup', () => auth.checkNeedsSetup());
     ipcMain.handle('api-setup-admin', (e, d) => auth.createUser(d.username, d.pin, 'owner'));
-    ipcMain.handle('api-login', (e, pin) => auth.authenticateByPin(pin));
+    ipcMain.handle('api-login', async (e, pin) => {
+        try {
+            console.log('[IPC] api-login invoked');
+            const result = await auth.authenticateByPin(pin);
+            console.log('[IPC] api-login result:', JSON.stringify({ success: result?.success, hasUser: !!result?.user }));
+            return result;
+        } catch (err) {
+            console.error('[IPC] api-login FATAL ERROR:', err);
+            return { success: false, error: err?.message || 'Terjadi kesalahan sistem.' };
+        }
+    });
     ipcMain.handle('api-get-users', () => auth.getAllUsers());
     
     ipcMain.handle('api-get-active-session', () => sessions.getActiveSession());
@@ -163,6 +173,28 @@ function bootDeferredLogic() {
     ipcMain.handle('api-get-customers', () => customers.getAllCustomers());
     ipcMain.handle('api-add-customer', (e, d) => customers.createCustomer(d));
     ipcMain.handle('api-get-suppliers', () => suppliers.getAllSuppliers());
+    
+    // 🚚 PURCHASING
+    const purchasing = require('../src/db/queries/purchasing.cjs');
+    ipcMain.handle('api-get-purchase-orders', (e, f) => purchasing.getAllPurchaseOrders(f));
+    ipcMain.handle('api-create-po', (e, d) => purchasing.createPurchaseOrder(d));
+    ipcMain.handle('api-receive-po', (e, id) => purchasing.receivePurchaseOrder(id));
+    ipcMain.handle('api-pay-po', (e, id, amount, sessionId) => purchasing.recordPurchasePayment(id, { amount, payment_method: 'cash' }, sessionId));
+
+    // 💸 EXPENSES & RECEIVABLES
+    const expenses = require('../src/db/queries/expenses.cjs');
+    const receivables = require('../src/db/queries/receivables.cjs');
+    ipcMain.handle('api-record-expense', (e, d) => expenses.createExpense(d));
+    ipcMain.handle('api-record-payment', (e, id, d, sid) => receivables.recordPayment(id, d, sid));
+    ipcMain.handle('api-get-movements', (e, pid) => products.getStockMovements(pid));
+    ipcMain.handle('api-apply-adjustments', (e, items, userId) => {
+        return db.transaction(() => {
+            for (const item of items) {
+                products.adjustStock(item.id, item.diff, 'Opname', userId || 'Admin');
+            }
+            return { success: true };
+        })();
+    });
 
     // 🕒 SESSIONS & AUTO-BACKUP
     ipcMain.handle('api-open-session', (e, cash) => sessions.openSession(cash));

@@ -7,6 +7,9 @@ export function usePosData() {
   const [customers, setCustomers] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [movements, setMovements] = useState([]);
   const [settings, setSettings] = useState({});
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +37,9 @@ export function usePosData() {
         safeIpc(window.api.getSessions(), []),
         safeIpc(window.api.getSettings(), {}),
         safeIpc(window.api.getCategories(), []),
+        safeIpc(window.api.getSuppliers(), []),
+        safeIpc(window.api.getPurchaseOrders(), []),
+        safeIpc(window.api.getMovements(), []),
         safeIpc(window.api.getActiveSession(), null)
       ]);
 
@@ -45,8 +51,11 @@ export function usePosData() {
       setSessions(s || []);
       setSettings(set || {});
       setCategories(cat || []);
+      setSuppliers(results[6]?.value || []);
+      setPurchaseOrders(results[7]?.value || []);
+      setMovements(results[8]?.value || []);
       
-      if (as && as.id) {
+      const as = results[9]?.value;
         setSession(as);
       }
 
@@ -67,6 +76,9 @@ export function usePosData() {
     customers, 
     transactions, 
     sessions, 
+    suppliers,
+    purchaseOrders,
+    movements,
     settings, 
     categories, 
     isLoading, 
