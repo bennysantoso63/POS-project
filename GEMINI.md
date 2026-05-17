@@ -65,6 +65,15 @@ JANGAN tampilkan full file.
 - DILARANG membuat "improvement" tanpa diminta
 - DILARANG self-compare dengan auditor lain
 - DILARANG claim output "lebih akurat" tanpa bukti
+- DILARANG skip graphify jika command gagal.
+  Jika graphify tidak available → output [GRAPHIFY UNAVAILABLE]
+  → STOP → tunggu instruksi
+- DILARANG generate implementation plan, roadmap, atau
+  proposal yang tidak diminta dalam TC.
+  Jika ada suggestion → tulis [SUGGESTION: 1 kalimat]
+  di SESSION_REPORT, tidak lebih.
+- DILARANG menambahkan output apapun setelah SESSION_REPORT.
+  SESSION_REPORT adalah output terakhir — titik.
 
 ## AUDIT MODE
 Ketika diminta audit:
@@ -94,3 +103,8 @@ Akhir setiap sesi yang ada learning baru:
 1. Identify pattern failure baru
 2. Tambah ke section yang relevan
 3. Note di Progress.md: "GEMINI.md upgraded — [alasan]"
+
+## VERSI
+v1.0 — 2026-05-17 — Initial constitution
+v1.1 — 2026-05-17 — Patch: graphify unavailable handling,
+       no unsolicited plans, SESSION_REPORT adalah output final
