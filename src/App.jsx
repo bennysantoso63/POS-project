@@ -32,6 +32,7 @@ import MonitorView from './components/MonitorView';
 import PettyCashModal from './components/PettyCashModal';
 import useUIStore from './store/useUIStore';
 import { useSessionStore } from './store/useSessionStore';
+import SelfServiceView from './components/SelfServiceView';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -173,6 +174,13 @@ function AppContent({ fetchData, posData }) {
             cart={cart} setCart={setCart} selectedCustomerId={selectedCustomerId} setSelectedCustomerId={setSelectedCustomerId}
             onCheckout={handleCheckout} onHoldBill={handleHoldBill} onRestoreBill={handleRestoreBill}
             formatIDR={formatIDR}
+          />
+        );
+      case 'self_service':
+        return (
+          <SelfServiceView 
+            onCheckout={handleCheckout}
+            onBack={() => setActiveView('dashboard')}
           />
         );
       case 'dashboard':    return <DashboardView transactions={transactions} products={products} formatIDR={formatIDR} />;

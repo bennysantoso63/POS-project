@@ -1,7 +1,7 @@
 import { 
   LayoutDashboard, ShoppingCart, Users, Package, Activity, 
   ReceiptText, Settings, LogOut, Store, Truck, Scan, Wallet, Landmark, CreditCard, BrainCircuit,
-  Sun, Moon, Power, ShieldCheck, Zap, RefreshCw
+  Sun, Moon, Power, ShieldCheck, Zap, RefreshCw, Tablet
 } from 'lucide-react';
 import avatarLingLing from '../assets/lingling.png';
 
@@ -21,6 +21,7 @@ export default function Sidebar() {
   const navItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dasbor', show: true },
     { id: 'cashier', icon: ShoppingCart, label: 'Kasir', show: true },
+    { id: 'self_service', icon: Tablet, label: 'Kasir Mandiri', show: true },
     { id: 'accounting', icon: Landmark, label: 'Finansial', show: isOwner || isManager },
     { id: 'purchasing', icon: Truck, label: 'Kulakan', show: isOwner || isManager },
     { id: 'crm', icon: Users, label: 'Pelanggan', show: isOwner || isManager },
