@@ -15,8 +15,8 @@ module.exports = {
           secondary: '#6366F1',
           accent: '#F43F5E',
           muted: '#94A3B8',
-          card: '#1E293B',
-          border: 'rgba(255, 255, 255, 0.1)'
+          card: 'var(--color-card)',
+          border: 'var(--color-border)'
         }
       }
     }
