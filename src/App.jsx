@@ -199,7 +199,18 @@ function AppContent({ fetchData, posData }) {
             <IntelligenceView rfmData={rfmData} aprioriRules={aprioriRules} burnRate={burnRate} bigBangData={bigBangData} />
           </AccessGuard>
         );
-      case 'settings':     return <SettingsView settings={settings} formatIDR={formatIDR} />;
+      case 'settings':
+        return (
+          <SettingsView 
+            config={settings} 
+            formatIDR={formatIDR} 
+            isDarkMode={isDarkMode} 
+            toggleDarkMode={toggleDarkMode}
+            currentUser={currentUser}
+            isOwner={isOwner}
+            canEdit={isOwner}
+          />
+        );
       case 'purchasing':
         return (
           <AccessGuard canAccess={isOwner || isManager}
