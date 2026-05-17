@@ -31,6 +31,7 @@ import SyncView from './components/SyncView';
 import MonitorView from './components/MonitorView';
 import PettyCashModal from './components/PettyCashModal';
 import useUIStore from './store/useUIStore';
+import { useSessionStore } from './store/useSessionStore';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {

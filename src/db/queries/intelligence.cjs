@@ -104,9 +104,27 @@ const getSembahyangBigBang = () => {
 const askLingLing = async (question) => {
   // Simple heuristic response logic for Ling-Ling Chat
   const q = question.toLowerCase();
-  if (q.includes('stok')) return "Beberapa produk lilin dan dupa mulai menipis menjelang hari raya Cheng Beng. Sebaiknya lakukan restock 30% lebih banyak.";
-  if (q.includes('laris')) return "Produk paling laris bulan ini adalah Dupa Wangi Premium dan Lilin Merah Besar.";
-  return "Saya Ling-Ling, asisten AI toko Anda. Saya bisa membantu menganalisa stok dan tren penjualan berdasarkan kalender lunar.";
+  if (q.includes('stok')) return {
+    found: true,
+    answer: "Beberapa produk lilin dan dupa mulai menipis menjelang hari raya Cheng Beng. Sebaiknya lakukan restock 30% lebih banyak.",
+    confidence_score: 0.85,
+    citations: ["Database Lokal"],
+    nudge: "Gunakan modul Kulakan untuk segera memesan dari supplier pilihan."
+  };
+  if (q.includes('laris')) return {
+    found: true,
+    answer: "Produk paling laris bulan ini adalah Dupa Wangi Premium dan Lilin Merah Besar.",
+    confidence_score: 0.85,
+    citations: ["Database Lokal"],
+    nudge: "Pastikan stok lilin merah besar aman untuk perayaan Cheng Beng terdekat."
+  };
+  return {
+    found: true,
+    answer: "Saya Ling-Ling, asisten AI toko Anda. Saya bisa membantu menganalisa stok dan tren penjualan berdasarkan kalender lunar.",
+    confidence_score: 0.85,
+    citations: ["Database Lokal"],
+    nudge: "Coba tanyakan: 'stok apa yang habis?' atau 'produk apa yang laris?'"
+  };
 };
 
 module.exports = {
