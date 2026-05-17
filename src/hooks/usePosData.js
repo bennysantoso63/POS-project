@@ -43,7 +43,7 @@ export function usePosData() {
         safeIpc(window.api.getActiveSession(), null)
       ]);
 
-      const [p, c, t, s, set, cat, as] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+      const [p, c, t, s, set, cat] = results.map(r => r.status === 'fulfilled' ? r.value : null);
 
       setProducts(p || []);
       setCustomers(c || []);
@@ -55,9 +55,8 @@ export function usePosData() {
       setPurchaseOrders(results[7]?.value || []);
       setMovements(results[8]?.value || []);
       
-      const as = results[9]?.value;
-        setSession(as);
-      }
+      const activeSession = results[9]?.value;
+      setSession(activeSession);
 
     } catch (err) {
       console.error("Fetch Error:", err);

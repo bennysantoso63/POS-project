@@ -96,13 +96,13 @@ function createWindow() {
 
     mainWindow.webContents.on('dom-ready', () => {
         console.log('[RENDERER] DOM ready');
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
+        if (isDev) mainWindow.webContents.openDevTools({ mode: 'detach' });
     });
 
     // 🚀 PHASE 2: UI is ready to paint
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
+        if (isDev) mainWindow.webContents.openDevTools({ mode: 'detach' });
         mainWindow.focus();
         
         // Load deferred logic after window is visible
