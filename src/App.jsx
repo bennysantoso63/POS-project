@@ -83,7 +83,7 @@ function AppContent({ fetchData, posData }) {
   const [showPettyCash, setShowPettyCash] = useState(false);
   const [monitoringSubTab, setMonitoringSubTab] = useState('sessions');
 
-  const { products, customers, transactions, expenses, settings, categories, sessions, movements } = posData;
+  const { products, customers, transactions, expenses, settings, categories, sessions, movements, heldBills } = posData;
 
   const handleCreatePO = async (data) => {
     const res = await window.api?.createPO?.(data);
@@ -171,6 +171,7 @@ function AppContent({ fetchData, posData }) {
         return (
           <CashierView 
             products={products} categories={categories} customers={customers} settings={settings} 
+            heldBills={heldBills} aprioriRules={aprioriRules}
             cart={cart} setCart={setCart} selectedCustomerId={selectedCustomerId} setSelectedCustomerId={setSelectedCustomerId}
             onCheckout={handleCheckout} onHoldBill={handleHoldBill} onRestoreBill={handleRestoreBill}
             formatIDR={formatIDR}

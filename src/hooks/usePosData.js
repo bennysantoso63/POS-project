@@ -13,6 +13,7 @@ export function usePosData() {
   const [expenses, setExpenses] = useState([]);
   const [settings, setSettings] = useState({});
   const [categories, setCategories] = useState([]);
+  const [heldBills, setHeldBills] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const { setSession } = useSessionStore();
@@ -42,7 +43,8 @@ export function usePosData() {
         safeIpc(window.api.getPurchaseOrders(), []),
         safeIpc(window.api.getMovements(), []),
         safeIpc(window.api.getActiveSession(), null),
-        safeIpc(window.api.getExpenses(), [])
+        safeIpc(window.api.getExpenses(), []),
+        safeIpc(window.api.getHeldBills(), [])
       ]);
 
       const [p, c, t, s, set, cat] = results.map(r => r.status === 'fulfilled' ? r.value : null);
@@ -57,6 +59,7 @@ export function usePosData() {
       setPurchaseOrders(results[7]?.value || []);
       setMovements(results[8]?.value || []);
       setExpenses(results[10]?.value || []);
+      setHeldBills(results[11]?.value || []);
       
       const activeSession = results[9]?.value;
       setSession(activeSession);
@@ -84,6 +87,7 @@ export function usePosData() {
     expenses,
     settings,  
     categories, 
+    heldBills,
     isLoading, 
     fetchData 
   };
