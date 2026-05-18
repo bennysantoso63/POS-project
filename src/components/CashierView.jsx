@@ -213,9 +213,18 @@ export default function CashierView({
     );
   }, [products, search, activeCategory]);
 
+  const activeCustomer = useMemo(() => {
+    return customers.find(c => c.id === selectedCustomerId);
+  }, [customers, selectedCustomerId]);
+
   // --- LOGIC: PERHITUNGAN TOTAL ---
   const billMetrics = useMemo(() => {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price_retail * item.qty), 0);
+    const subtotal = cart.reduce((sum, item) => {
+      const price = activeCustomer?.default_tier === 'partai' 
+        ? (item.price_wholesale || item.price_retail) 
+        : item.price_retail;
+      return sum + (price * item.qty);
+    }, 0);
     
     let discountAmt = 0;
     if (discountType === 'percent') discountAmt = (subtotal * discountValue) / 100;
@@ -233,7 +242,7 @@ export default function CashierView({
     else if (roundingMode === 'thousands') grandTotal = Math.ceil(grandTotal / 1000) * 1000;
 
     return { subtotal, discountAmt, taxAmt, serviceAmt, grandTotal };
-  }, [cart, discountType, discountValue, applyTax, applyService, settings.rounding_mode]);
+  }, [cart, discountType, discountValue, applyTax, applyService, settings.rounding_mode, activeCustomer]);
 
   // --- LOGIC: KERANJANG BELANJA ---
   const handleAddToCart = (prod) => {
@@ -329,7 +338,7 @@ export default function CashierView({
         product_id: i.id,
         name: i.name,
         qty: i.qty,
-        price_at_transaction: i.price_retail
+        price_at_transaction: activeCustomer?.default_tier === 'partai' ? (i.price_wholesale || i.price_retail) : i.price_retail
       }))
     };
 
@@ -623,9 +632,14 @@ export default function CashierView({
                 
                 <div className="mt-auto flex items-end justify-between z-10 w-full relative">
                     <div className="flex flex-col">
-                       <span className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-50">Harga</span>
+                       <span className="text-[10px] font-black text-brand-muted uppercase tracking-[0.2em] mb-2 opacity-50 flex items-center gap-1.5">
+                           Harga
+                           {activeCustomer?.default_tier === 'partai' && p.price_wholesale > 0 && (
+                             <span className="text-[8px] text-amber-500 font-bold tracking-normal uppercase">(Grosir)</span>
+                           )}
+                        </span>
                        <span className={`font-black text-3xl tracking-tighter leading-none ${isOutOfStock ? 'text-brand-muted' : 'text-brand-accent group-hover:scale-110 transition-transform origin-left'}`}>
-                          {formatIDR(p.price_retail)}
+                          {formatIDR(activeCustomer?.default_tier === 'partai' ? (p.price_wholesale || p.price_retail) : p.price_retail)}
                        </span>
                     </div>
                     {!isOutOfStock && (
@@ -659,6 +673,15 @@ export default function CashierView({
                 <div className="flex items-center gap-3">
                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                    <p className="text-[10px] font-bold text-brand-muted tracking-widest opacity-60">{cart.length} Jenis Produk Terpilih</p>
+                   {activeCustomer && (
+                      <span className={`text-[8px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg border ml-2 ${
+                        activeCustomer.default_tier === 'partai' 
+                          ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+                          : 'bg-brand-primary/10 text-brand-primary border-brand-primary/20'
+                      }`}>
+                        {activeCustomer.default_tier === 'partai' ? 'Harga Grosir (Partai)' : 'Harga Eceran'}
+                      </span>
+                    )}
                 </div>
              </div>
           </div>
@@ -705,14 +728,21 @@ export default function CashierView({
                       </p>
                    )}
                    <p className="text-[11px] font-bold text-brand-muted tracking-wider mt-4 opacity-50 flex items-center gap-3">
-                     <span className="text-brand-primary font-black">@ {formatIDR(item.price_retail)}</span>
+                     <span className="text-brand-primary font-black">
+                       @ {formatIDR(activeCustomer?.default_tier === 'partai' ? (item.price_wholesale || item.price_retail) : item.price_retail)}
+                       {activeCustomer?.default_tier === 'partai' && item.price_wholesale > 0 && (
+                         <span className="text-[8px] text-amber-500 font-bold ml-2">(Grosir)</span>
+                       )}
+                     </span>
                      <span className="w-1.5 h-1.5 rounded-full bg-brand-border"></span>
                      <span>SKU: {item.sku}</span>
                    </p>
                 </div>
                 <div className="flex flex-col items-end">
                    <span className="text-[9px] font-black text-brand-muted uppercase tracking-widest mb-2 opacity-50">Total Baris</span>
-                   <p className="font-black text-brand-text text-2xl tracking-tighter group-hover/cart-item:text-brand-accent transition-all duration-500">{formatIDR(item.qty * item.price_retail)}</p>
+                   <p className="font-black text-brand-text text-2xl tracking-tighter group-hover/cart-item:text-brand-accent transition-all duration-500">
+                     {formatIDR(item.qty * (activeCustomer?.default_tier === 'partai' ? (item.price_wholesale || item.price_retail) : item.price_retail))}
+                   </p>
                 </div>
               </div>
               
