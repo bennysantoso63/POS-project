@@ -108,7 +108,7 @@ export default function SelfServiceView({
             <p className="text-brand-muted text-sm mt-1">Edge Vision Scanner • Offline Mode</p>
           </div>
           <div className="flex gap-4">
-            <button onClick={onBack} className="px-4 py-2 rounded-xl border border-brand-border bg-brand-card text-brand-muted hover:text-brand-text transition-all text-xs uppercase font-black tracking-widest">
+            <button onClick={onBack} className="px-4 py-2 rounded-xl border border-brand-border bg-brand-card text-brand-muted hover:text-brand-text transition-all text-xs font-black tracking-wider">
               Keluar
             </button>
             <div className={`px-4 py-2 rounded-full border ${isScanning ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-brand-border bg-brand-card text-brand-muted'} flex items-center gap-2 text-sm`}>
@@ -142,12 +142,12 @@ export default function SelfServiceView({
             <div className="w-full h-[2px] bg-red-500/60 animate-scan-line shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
           </div>
 
-          <p className="absolute bottom-8 text-blue-500 text-xs font-black uppercase tracking-[0.3em] z-20 animate-pulse">Scanning Enabled</p>
+          <p className="absolute bottom-8 text-blue-500 text-xs font-black tracking-wider z-20 animate-pulse">Scanning Enabled</p>
         </div>
 
         {/* Input Manual Fallback */}
         <div className="mt-8">
-          <label className="text-[10px] font-black text-brand-muted uppercase tracking-widest mb-3 block">Input Manual / Hasil Scan Terakhir</label>
+          <label className="text-[10px] font-black text-brand-muted tracking-wider mb-3 block">Input Manual / Hasil Scan Terakhir</label>
           <div className="flex gap-4">
             <input 
               type="text" 
@@ -158,7 +158,7 @@ export default function SelfServiceView({
             />
             <button 
               onClick={() => handleProcessBarcode(barcodeInput)}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-10 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-blue-500/10"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-10 rounded-2xl font-black tracking-wider transition-all active:scale-95 shadow-xl shadow-blue-500/10"
             >
               Proses
             </button>
@@ -186,10 +186,10 @@ export default function SelfServiceView({
                 <p className="text-sm font-bold text-brand-text leading-relaxed">{lingLingMessage.text}</p>
                 {lingLingMessage.type === 'suggestion' && (
                   <div className="mt-4 flex gap-3">
-                    <button onClick={acceptLingLingSuggestion} className="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl hover:bg-blue-500 transition-all active:scale-95">
+                    <button onClick={acceptLingLingSuggestion} className="bg-blue-600 text-white text-[10px] font-black tracking-wider px-5 py-2.5 rounded-xl hover:bg-blue-500 transition-all active:scale-95">
                       Ya, Masukkan
                     </button>
-                    <button onClick={() => { setLingLingMessage(null); setBarcodeInput(''); }} className="bg-brand-card text-brand-muted text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl hover:bg-brand-bg transition-all">
+                    <button onClick={() => { setLingLingMessage(null); setBarcodeInput(''); }} className="bg-brand-card text-brand-muted text-[10px] font-black tracking-wider px-5 py-2.5 rounded-xl hover:bg-brand-bg transition-all">
                       Abaikan
                     </button>
                   </div>
@@ -199,7 +199,7 @@ export default function SelfServiceView({
           ) : (
             <div className="text-center opacity-40">
               <Sparkles className="w-8 h-8 text-brand-muted mx-auto mb-3" />
-              <p className="text-[10px] font-bold text-brand-muted uppercase tracking-widest">Ling-Ling AI Siap Membantu</p>
+              <p className="text-[10px] font-bold text-brand-muted tracking-wider">Ling-Ling AI Siap Membantu</p>
             </div>
           )}
         </div>
@@ -209,7 +209,7 @@ export default function SelfServiceView({
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-brand-muted/40 space-y-6">
               <ShoppingCart size={80} strokeWidth={1} className="opacity-20" />
-              <p className="text-xs font-black uppercase tracking-widest">Keranjang Kosong</p>
+              <p className="text-xs font-black tracking-wider">Keranjang Kosong</p>
             </div>
           ) : (
             cart.map((item, index) => (
@@ -219,7 +219,7 @@ export default function SelfServiceView({
                     {item.qty}x
                   </div>
                   <div>
-                    <p className="font-bold text-brand-text text-sm uppercase tracking-tight">{item.name}</p>
+                    <p className="font-bold text-brand-text text-sm tracking-tight">{item.name}</p>
                     <p className="text-[10px] text-brand-muted font-mono mt-1">{item.barcode}</p>
                   </div>
                 </div>
@@ -232,19 +232,19 @@ export default function SelfServiceView({
         {/* Panel Total & Pembayaran */}
         <div className="bg-brand-card border-t border-brand-border p-8 shadow-[0_-20px_50px_rgba(0,0,0,0.15)]">
           <div className="flex justify-between items-center mb-8">
-            <p className="text-[10px] font-black text-brand-muted uppercase tracking-widest">Total Tagihan</p>
+            <p className="text-[10px] font-black text-brand-muted tracking-wider">Total Tagihan</p>
             <h2 className="text-4xl font-black text-blue-500 tracking-tighter">{formatRupiah(totalBelanja)}</h2>
           </div>
           <button 
             disabled={cart.length === 0}
             onClick={() => onCheckout(totalBelanja)}
-            className={`w-full py-6 rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all text-sm ${
+            className={`w-full py-6 rounded-2xl font-black tracking-wider flex items-center justify-center gap-3 transition-all text-sm ${
               cart.length > 0 
                 ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-2xl shadow-emerald-500/20 active:scale-95' 
                 : 'bg-brand-bg text-brand-muted/40 cursor-not-allowed'
             }`}
           >
-            BAYAR SEKARANG <ChevronRight size={20} />
+            Bayar Sekarang <ChevronRight size={20} />
           </button>
         </div>
 

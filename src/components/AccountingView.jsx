@@ -86,14 +86,13 @@ export default function AccountingView({
         </div>
         
         <div className="flex flex-col md:flex-row items-center gap-6 animate-in fade-in slide-in-from-right-8 duration-700 relative z-30">
-          <div className="flex bg-brand-card/80 backdrop-blur-xl border-2 border-brand-border rounded-[2rem] shadow-2xl group hover:border-brand-primary/30 transition-all duration-500 max-w-md w-full relative z-40 overflow-visible">
+          <div className="flex items-center gap-4 relative z-40 overflow-visible">
              <CustomDropdown 
                value={month} 
                onChange={(val) => setMonth(parseInt(val))} 
                options={['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'].map((m, i) => ({ value: i, label: m }))} 
                label="Bulan"
              />
-             <div className="w-px h-8 bg-brand-border self-center opacity-30"></div>
              <CustomDropdown 
                value={year} 
                onChange={(val) => setYear(parseInt(val))} 

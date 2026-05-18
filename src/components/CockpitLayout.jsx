@@ -69,8 +69,8 @@ export default function CockpitLayout({ children, userRole, terminalName, onTabC
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 bg-brand-bg/50 px-3 py-1.5 rounded-xl border border-brand-border/50 shadow-inner">
             <Terminal className="w-3.5 h-3.5 text-brand-primary" />
-            <span className="font-black tracking-[0.2em] text-brand-muted uppercase">
-              {terminalName || 'NODE-01'}
+            <span className="font-black tracking-wider text-brand-muted">
+              {terminalName || 'Node-01'}
             </span>
           </div>
           <div className="flex items-center gap-3 text-brand-muted font-bold tracking-widest border-l border-brand-border pl-6">
@@ -89,7 +89,7 @@ export default function CockpitLayout({ children, userRole, terminalName, onTabC
               className={`w-4 h-4 ${syncStatus === 'SYNCING' ? 'text-brand-primary animate-pulse' : syncStatus === 'ERROR' ? 'text-rose-500' : 'text-emerald-500'} group-hover:scale-110 transition-transform`} 
             />
             <span className={`font-black tracking-widest ${syncStatus === 'ERROR' ? 'text-rose-500' : 'text-emerald-500'} opacity-70`}>
-              {syncStatus === 'SYNCING' ? 'UPLOADING' : syncStatus === 'ERROR' ? 'OFFLINE' : 'SYNCED'}
+              {syncStatus === 'SYNCING' ? 'Uploading' : syncStatus === 'ERROR' ? 'Offline' : 'Synced'}
             </span>
           </div>
 
@@ -110,8 +110,8 @@ export default function CockpitLayout({ children, userRole, terminalName, onTabC
           {/* User Badge dengan Border Gradient */}
           <div className="flex items-center gap-3 pl-6 border-l border-brand-border">
             <div className="p-[1.5px] rounded-xl bg-gradient-to-r from-brand-primary via-brand-accent to-emerald-500 shadow-lg shadow-brand-primary/10">
-              <div className="bg-brand-card px-4 py-1 rounded-[10px] text-[9px] font-black tracking-[0.2em] text-brand-text uppercase">
-                {userRole || 'CASHIER'}
+              <div className="bg-brand-card px-4 py-1 rounded-[10px] text-[9px] font-black tracking-wider text-brand-text">
+                {userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase() : 'Cashier'}
               </div>
             </div>
           </div>

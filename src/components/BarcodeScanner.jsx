@@ -216,8 +216,8 @@ const BarcodeScanner = ({ onScan, compact = false }) => {
              </div>
             {!compact && (
               <div className="text-center space-y-2">
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-brand-text block">{sysStatus}</span>
-                <span className="text-[9px] font-bold text-brand-muted uppercase tracking-widest">WASM Neural Engine Loading...</span>
+                 <span className="text-[11px] font-black tracking-wider text-brand-text block">{sysStatus}</span>
+                 <span className="text-[9px] font-bold text-brand-muted tracking-wider">WASM Neural Engine Loading...</span>
               </div>
             )}
           </div>
@@ -261,7 +261,7 @@ const BarcodeScanner = ({ onScan, compact = false }) => {
                    <div className="absolute inset-0 flex items-center justify-center">
                       <div className="flex flex-col items-center gap-2 animate-bounce">
                          <AlertCircle className="text-[#FF826C] w-10 h-10" />
-                         <span className="text-[9px] font-black text-[#FF826C] uppercase tracking-[0.3em] bg-[#FF826C]/10 px-4 py-1 rounded-full border border-[#FF826C]/20 backdrop-blur-md">Unstable Focus</span>
+                          <span className="text-[9px] font-black text-[#FF826C] tracking-wider bg-[#FF826C]/10 px-4 py-1 rounded-full border border-[#FF826C]/20 backdrop-blur-md">Unstable Focus</span>
                       </div>
                    </div>
                  )}
@@ -270,8 +270,8 @@ const BarcodeScanner = ({ onScan, compact = false }) => {
 
             {/* Bottom Status Pill */}
             <div className="flex justify-center">
-               <span className={`px-4 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest backdrop-blur-md transition-colors duration-300 ${flash ? 'bg-[#38B2AC]/20 border-[#38B2AC] text-[#38B2AC] shadow-[0_0_10px_#38B2AC]' : metrics.isBlurry ? 'bg-[#FF826C]/20 border-[#FF826C]/50 text-[#FF826C]' : 'bg-[#53D2DC]/20 border-[#53D2DC]/50 text-[#53D2DC] shadow-[0_0_10px_#53D2DC]'}`}>
-                 {flash ? 'ID DECODED' : metrics.isBlurry ? 'ACQUIRING FOCUS...' : 'SCANNING ACTIVE'}
+               <span className={`px-4 py-1.5 rounded-full border text-[9px] font-black tracking-wider backdrop-blur-md transition-colors duration-300 ${flash ? 'bg-[#38B2AC]/20 border-[#38B2AC] text-[#38B2AC] shadow-[0_0_10px_#38B2AC]' : metrics.isBlurry ? 'bg-[#FF826C]/20 border-[#FF826C]/50 text-[#FF826C]' : 'bg-[#53D2DC]/20 border-[#53D2DC]/50 text-[#53D2DC] shadow-[0_0_10px_#53D2DC]'}`}>
+                 {flash ? 'ID Decoded' : metrics.isBlurry ? 'Acquiring Focus...' : 'Scanning Active'}
                </span>
             </div>
           </div>
@@ -284,20 +284,20 @@ const BarcodeScanner = ({ onScan, compact = false }) => {
           <div>
             <div className="flex items-center gap-3 mb-1">
                <div className={`w-2.5 h-2.5 rounded-full animate-pulse shadow-[0_0_12px_rgba(83,210,220,0.8)] ${metrics.isBlurry ? 'bg-[#FF826C]' : 'bg-[#53D2DC]'}`} />
-               <h3 className="text-sm font-black uppercase tracking-[0.3em] text-brand-text">Optic Neural Hub</h3>
+               <h3 className="text-sm font-black tracking-wider text-brand-text">Optic Neural Hub</h3>
             </div>
-            <p className="text-[9px] font-black text-brand-muted uppercase tracking-[0.2em] opacity-60">High-Precision Asset Identification</p>
+            <p className="text-[9px] font-black text-brand-muted tracking-wider opacity-60">High-Precision Asset Identification</p>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-bg border border-brand-border shadow-inner">
              <Info className="w-3.5 h-3.5 text-brand-muted" />
-             <span className="text-[8px] font-black text-brand-muted uppercase tracking-widest">WASM-4.8.0</span>
+             <span className="text-[8px] font-black text-brand-muted tracking-wider">WASM-4.8.0</span>
           </div>
         </div>
 
         {!compact ? (
           <div className="space-y-6 mt-2">
             <div className="group/metric">
-              <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.3em] text-brand-muted mb-3 group-hover/metric:text-brand-text transition-colors">
+              <div className="flex justify-between text-[10px] font-black tracking-wider text-brand-muted mb-3 group-hover/metric:text-brand-text transition-colors">
                 <span className="flex items-center gap-3"><Focus className="w-4 h-4 text-[#53D2DC]"/> Focus Variance</span>
                 <span className={`font-mono text-xs ${metrics.isBlurry ? 'text-[#FF826C]' : 'text-[#53D2DC]'}`}>{metrics.variance}</span>
               </div>
@@ -307,7 +307,7 @@ const BarcodeScanner = ({ onScan, compact = false }) => {
             </div>
 
             <div className="group/metric">
-              <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.3em] text-brand-muted mb-3 group-hover/metric:text-brand-text transition-colors">
+              <div className="flex justify-between text-[10px] font-black tracking-wider text-brand-muted mb-3 group-hover/metric:text-brand-text transition-colors">
                 <span className="flex items-center gap-3"><Cpu className="w-4 h-4 text-[#38B2AC]"/> Inference Latency</span>
                 <span className="font-mono text-xs text-[#38B2AC]">{metrics.processTime}ms</span>
               </div>
@@ -318,7 +318,7 @@ const BarcodeScanner = ({ onScan, compact = false }) => {
 
             <div className="bg-brand-primary/5 border border-brand-primary/20 p-5 rounded-2xl flex items-start gap-4 mt-8 group hover:bg-brand-primary/10 transition-all">
                <Sparkles className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-               <p className="text-[10px] font-bold text-brand-muted leading-relaxed uppercase tracking-widest opacity-80">
+               <p className="text-[10px] font-bold text-brand-muted leading-relaxed tracking-wider opacity-80">
                  Integrated with <span className="text-[#53D2DC]">CLAHE Preprocessing</span> and <span className="text-[#53D2DC]">Hybrid Binarization</span> for superior low-light asset identification.
                </p>
             </div>
@@ -327,9 +327,9 @@ const BarcodeScanner = ({ onScan, compact = false }) => {
            <div className="space-y-3">
              <div className="flex items-center gap-3">
                 <Scan className="w-5 h-5 text-[#53D2DC] animate-pulse" />
-                <p className="text-xs font-black text-brand-text leading-none uppercase tracking-tighter">Ready for Scan Sequence</p>
-             </div>
-             <p className="text-[9px] font-bold text-brand-muted leading-relaxed uppercase tracking-[0.2em] opacity-60">Center the barcode within the holographic brackets for real-time AI recognition.</p>
+                 <p className="text-xs font-black text-brand-text leading-none tracking-tight">Ready for Scan Sequence</p>
+              </div>
+              <p className="text-[9px] font-bold text-brand-muted leading-relaxed tracking-wider opacity-60">Center the barcode within the holographic brackets for real-time AI recognition.</p>
            </div>
         )}
       </div>

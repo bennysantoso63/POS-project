@@ -33,6 +33,7 @@ import PettyCashModal from './components/PettyCashModal';
 import useUIStore from './store/useUIStore';
 import { useSessionStore } from './store/useSessionStore';
 import SelfServiceView from './components/SelfServiceView';
+import ScannerView from './components/ScannerView';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -285,6 +286,8 @@ function AppContent({ fetchData, posData }) {
             />
           </AccessGuard>
         );
+      case 'scanner':
+        return <ScannerView />;
       default:             return <CashierView products={products} categories={categories} customers={customers} formatIDR={formatIDR} />;
     }
   };

@@ -365,7 +365,7 @@ export default function CashierView({
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${activeCategory === 'Semua' ? 'bg-white/20' : 'bg-brand-bg border border-brand-border'}`}>
                <Package size={20}/>
             </div>
-            <span className="text-[9px] font-black tracking-widest uppercase opacity-80">Semua</span>
+            <span className="text-[9px] font-black tracking-widest opacity-80">Semua</span>
             {activeCategory === 'Semua' && (
                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-in zoom-in duration-300" />
             )}
@@ -384,7 +384,7 @@ export default function CashierView({
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${activeCategory === catName ? 'bg-white/20' : 'bg-brand-bg border border-brand-border'}`}>
                    <Package size={20}/>
                 </div>
-                <span className="text-[8px] font-black tracking-tight text-center leading-tight px-1 line-clamp-2 uppercase opacity-80">{catName}</span>
+                <span className="text-[8px] font-black tracking-tight text-center leading-tight px-1 line-clamp-2 opacity-80">{catName}</span>
                 {activeCategory === catName && (
                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-in zoom-in duration-300" />
                 )}
@@ -459,7 +459,7 @@ export default function CashierView({
           </div>
 
           <div className="flex flex-col gap-3 relative z-10">
-             <span className="text-[9px] font-black text-brand-primary tracking-[0.3em] ml-2 uppercase opacity-60 flex items-center gap-3">
+             <span className="text-[9px] font-black text-brand-primary tracking-wider ml-2 opacity-60 flex items-center gap-3">
                 <Search size={12} /> Cari Produk atau Barcode
              </span>
              <div className="relative group w-full">
@@ -480,7 +480,7 @@ export default function CashierView({
           </div>
 
           <div className="flex flex-col gap-3 relative z-10">
-             <span className="text-[9px] font-black text-brand-primary tracking-[0.3em] ml-2 uppercase opacity-60 flex items-center gap-3">
+             <span className="text-[9px] font-black text-brand-primary tracking-wider ml-2 opacity-60 flex items-center gap-3">
                 <Users size={12} /> Identitas Pelanggan (CRM)
              </span>
              <CustomDropdown 
@@ -806,7 +806,7 @@ export default function CashierView({
           <div className="flex justify-between items-end mb-12 p-10 bg-brand-primary/5 dark:bg-brand-primary/10 rounded-[3rem] border-2 border-brand-primary/20 shadow-inner relative overflow-hidden group/total hover:border-brand-primary/40 transition-all duration-700">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,var(--brand-primary-rgb)_0%,transparent_50%)] opacity-10"></div>
             <div className="flex flex-col relative z-10">
-               <span className="text-[11px] font-bold tracking-widest text-brand-muted mb-4 opacity-50 flex items-center gap-3 uppercase">
+               <span className="text-[11px] font-bold tracking-widest text-brand-muted mb-4 opacity-50 flex items-center gap-3">
                   <Activity size={12} className="text-brand-primary" /> Total Bayar
                </span>
                <span className={`text-6xl font-black tracking-tighter leading-none transition-all duration-700 origin-left ${billMetrics.grandTotal > 0 ? 'text-brand-accent drop-shadow-[0_0_30px_rgba(var(--brand-accent-rgb),0.4)] scale-105' : 'text-brand-text opacity-40'}`}>
@@ -817,7 +817,7 @@ export default function CashierView({
                <div className={`w-16 h-16 rounded-[1.8rem] flex items-center justify-center border-2 transition-all duration-700 mb-4 ${billMetrics.grandTotal > 0 ? 'bg-brand-accent/20 text-brand-accent border-brand-accent/30 rotate-12 scale-110 shadow-xl' : 'bg-brand-bg text-brand-muted border-brand-border opacity-30'}`}>
                   <Zap size={32} className={billMetrics.grandTotal > 0 ? 'animate-pulse' : ''} />
                </div>
-               <span className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-muted opacity-40">Status: {billMetrics.grandTotal > 0 ? 'Siap Bayar' : 'Kosong'}</span>
+               <span className="text-[9px] font-black tracking-widest text-brand-muted opacity-40">Status: {billMetrics.grandTotal > 0 ? 'Siap Bayar' : 'Kosong'}</span>
             </div>
           </div>
 
@@ -840,7 +840,7 @@ export default function CashierView({
                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${method.primary ? 'bg-white/20 shadow-inner group-hover/btn:scale-110' : 'bg-brand-bg/80 border border-brand-border text-brand-primary shadow-sm group-hover/btn:scale-110 group-hover/btn:bg-brand-primary group-hover/btn:text-white transition-colors'}`}>
                       <method.icon size={28}/>
                    </div>
-                   <span className="text-[10px] font-bold tracking-[0.2em] uppercase opacity-80">{method.label}</span>
+                   <span className="text-[10px] font-bold tracking-wider opacity-80">{method.label}</span>
                    <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 transition-all duration-500 group-hover/btn:w-1/2 ${method.primary ? 'bg-white/30' : 'bg-brand-primary/30'}`}></div>
                 </button>
              ))}

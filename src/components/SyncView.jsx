@@ -275,7 +275,7 @@ export default function SyncView() {
                 className="w-full py-5 bg-brand-card/80 border-2 border-brand-border rounded-[2rem] text-[10px] font-black text-brand-primary hover:text-white hover:bg-brand-primary transition-all flex items-center justify-center gap-4 tracking-[0.3em] active:scale-95 shadow-xl shadow-black/5"
               >
                 <LogIn size={18} />
-                {isGoogleSyncing ? 'MENGHUBUNGKAN...' : 'LOGIN AKUN GOOGLE'}
+                {isGoogleSyncing ? 'Menghubungkan...' : 'Login Akun Google'}
               </button>
             ) : (
               <div className="flex flex-col gap-3">
@@ -285,7 +285,7 @@ export default function SyncView() {
                   className="w-full py-5 bg-emerald-500 text-white rounded-[2rem] text-[10px] font-black hover:bg-emerald-600 transition-all flex items-center justify-center gap-4 tracking-[0.3em] active:scale-95 shadow-xl shadow-emerald-500/20"
                 >
                   <UserPlus size={18} />
-                  {isGoogleSyncing ? 'MENYINKRONKAN...' : 'MULAI SYNC KONTAK'}
+                  {isGoogleSyncing ? 'Menyinkronkan...' : 'Mulai Sync Kontak'}
                 </button>
                 <button
                   onClick={handleManualBackup}
@@ -293,7 +293,7 @@ export default function SyncView() {
                   className="w-full py-5 bg-brand-primary/10 border border-brand-primary/30 text-brand-primary rounded-[2rem] text-[10px] font-black hover:bg-brand-primary hover:text-white transition-all flex items-center justify-center gap-4 tracking-[0.3em] active:scale-95"
                 >
                   <Database size={18} />
-                  {isGoogleSyncing ? 'MEMBACKUP...' : 'BACKUP DB KE DRIVE'}
+                  {isGoogleSyncing ? 'Membackup...' : 'Backup DB ke Drive'}
                 </button>
               </div>
             )}
@@ -395,7 +395,7 @@ export default function SyncView() {
                   : 'bg-brand-primary hover:bg-brand-secondary text-white shadow-2xl shadow-brand-primary/40'
                 }`}
               >
-                {preview.errors.length > 0 ? 'FIX ERRORS FIRST' : 'COMMIT TO DATABASE'}
+                {preview.errors.length > 0 ? 'Perbaiki Error Dahulu' : 'Commit ke Database'}
                 <ArrowRight size={18} />
               </button>
            </div>

@@ -8,15 +8,16 @@ import {
 } from 'lucide-react';
 
 import CustomDropdown from './ui/CustomDropdown';
+import { useNotify } from '../hooks/useNotify';
 
 export default function HistoryView({ 
   transactions = [], 
   onPrintReceipt, 
   onVoidTransaction, 
   currentUser, 
-  showToast,
   formatIDR
 }) {
+  const { notifySuccess, notifyError } = useNotify();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [dateFilter, setDateFilter] = useState('Semua');
@@ -66,9 +67,9 @@ export default function HistoryView({
       onVoidTransaction(authModal.trxId, 'admin-id');
       setAuthModal({ isOpen: false, trxId: null });
       setAdminPin('');
-      showToast?.('Otoritas Berhasil: Transaksi telah dibatalkan.', 'success');
+      notifySuccess('Otoritas Berhasil: Transaksi telah dibatalkan.');
     } else {
-      showToast?.('Otoritas Ditolak: PIN Admin salah.', 'error');
+      notifyError('Otoritas Ditolak: PIN Admin salah.');
     }
   };
 

@@ -114,7 +114,7 @@ export default function DashboardView({
     if (active && payload && payload.length) {
       return (
         <div className="bg-brand-card/90 backdrop-blur-2xl border border-brand-border p-6 rounded-[2rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]">
-          <p className="text-[9px] font-black text-brand-muted uppercase tracking-[0.3em] mb-3">{label || 'Titik Data'}</p>
+          <p className="text-[9px] font-black text-brand-muted tracking-wider mb-3">{label || 'Titik Data'}</p>
           <p className="text-xl font-black text-brand-primary tracking-tighter">{formatIDR(payload[0].value)}</p>
           <div className="mt-3 pt-3 border-t border-brand-border flex items-center gap-2">
              <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></div>
@@ -153,14 +153,14 @@ export default function DashboardView({
                    type="date" 
                    value={customRange.start} 
                    onChange={(e) => setCustomRange({...customRange, start: e.target.value})}
-                   className="bg-transparent text-[10px] font-black text-brand-primary outline-none uppercase tracking-widest border-r border-brand-border pr-4"
+                   className="bg-transparent text-[10px] font-black text-brand-primary outline-none tracking-wider border-r border-brand-border pr-4"
                  />
                  <ArrowRight size={14} className="text-brand-muted opacity-30" />
                  <input 
                    type="date" 
                    value={customRange.end} 
                    onChange={(e) => setCustomRange({...customRange, end: e.target.value})}
-                   className="bg-transparent text-[10px] font-black text-brand-primary outline-none uppercase tracking-widest pl-2"
+                   className="bg-transparent text-[10px] font-black text-brand-primary outline-none tracking-wider pl-2"
                  />
               </div>
             )}
@@ -257,7 +257,7 @@ export default function DashboardView({
             {(!transactions || transactions.filter(t => t.status !== 'void').length === 0) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-card/20 backdrop-blur-[2px] rounded-[3rem] z-20">
                 <Activity size={40} className="text-brand-muted mb-4 opacity-20" />
-                <p className="text-[10px] font-bold text-brand-muted tracking-[0.3em] uppercase opacity-40">Belum Ada Data Transaksi</p>
+                <p className="text-[10px] font-bold text-brand-muted tracking-wider opacity-40">Belum ada data transaksi</p>
               </div>
             )}
           </div>
@@ -303,7 +303,7 @@ export default function DashboardView({
              {(!transactions || transactions.filter(t => ['cash', 'transfer', 'kasbon'].includes(t.payment_method)).length === 0) && (
                <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-card/20 backdrop-blur-[2px] rounded-[3rem] z-20">
                  <PieChartIcon size={40} className="text-brand-muted mb-4 opacity-20" />
-                 <p className="text-[10px] font-bold text-brand-muted tracking-[0.3em] uppercase opacity-40">Data Kosong</p>
+                 <p className="text-[10px] font-bold text-brand-muted tracking-wider opacity-40">Data kosong</p>
                </div>
              )}
           </div>

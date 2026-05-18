@@ -27,6 +27,7 @@ export default function Sidebar() {
     { id: 'crm', icon: Users, label: 'Pelanggan', show: isOwner || isManager },
     { id: 'piutang', icon: CreditCard, label: 'Buku Bon', show: isOwner || isManager },
     { id: 'inventory', icon: Package, label: 'Produk', show: true },
+    { id: 'scanner', icon: Scan, label: 'Scanner', show: true },
     { id: 'cycle_count', icon: Scan, label: 'Opname', show: isOwner || isManager },
     { id: 'sync', icon: RefreshCw, label: 'Sync', show: isOwner || isManager },
     { id: 'monitoring', icon: Activity, label: 'Realtime', show: isOwner || isManager },
