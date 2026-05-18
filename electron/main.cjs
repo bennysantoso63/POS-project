@@ -8,6 +8,24 @@ const db = require('../src/db/db.cjs');
 app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
 app.setPath('userData', path.join(app.getPath('appData'), 'pos-offline-mandiri'));
 
+// 🚀 PHASE 0: DB Schema Patch for Categories (Missing Columns)
+try {
+    db.exec("ALTER TABLE categories ADD COLUMN is_active INTEGER DEFAULT 1");
+    console.log("[MIGRATION] Added is_active column to categories table.");
+} catch (e) {
+    if (!e.message.includes('duplicate column name')) {
+        console.error("[MIGRATION ERROR] is_active:", e.message);
+    }
+}
+try {
+    db.exec("ALTER TABLE categories ADD COLUMN sort_order INTEGER DEFAULT 0");
+    console.log("[MIGRATION] Added sort_order column to categories table.");
+} catch (e) {
+    if (!e.message.includes('duplicate column name')) {
+        console.error("[MIGRATION ERROR] sort_order:", e.message);
+    }
+}
+
 // 🚀 PHASE 0: Global State
 let mainWindow;
 let isDeferredLogicLoaded = false;
