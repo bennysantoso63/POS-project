@@ -73,6 +73,20 @@ const createTransaction = db.transaction((txData) => {
   // 4. Update Customer total spent if exists
   if (txData.customerId) {
     db.prepare(`UPDATE customers SET total_spent = total_spent + ? WHERE id = ?`).run(txData.total, txData.customerId);
+    
+    if (txData.paymentMethod === 'kasbon') {
+      db.prepare(`
+        INSERT INTO receivables
+        (transaction_id, customer_id, amount, due_date, status, notes)
+        VALUES (?, ?, ?, ?, 'outstanding', ?)
+      `).run(
+        txId,
+        txData.customerId,
+        txData.total,
+        txData.dueDate || null,
+        'Kasbon dari transaksi kasir'
+      );
+    }
   }
 
   // 5. 🚀 TRIGGER ANALYTICS QUEUE (Reactive Pipeline Signal)

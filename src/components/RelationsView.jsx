@@ -9,7 +9,7 @@ import {
   Globe, Zap, Fingerprint, Lock, Unlock, ShieldAlert,
   ChevronDown, Layers, MoreVertical, Share2
 } from 'lucide-react';
-
+import { useNotify } from '../hooks/useNotify';
 const Modal = ({ title, children, onClose, maxWidth = 'max-w-xl' }) => (
   <div className="fixed inset-0 bg-brand-bg/95 backdrop-blur-3xl z-[2000] flex items-center justify-center p-10 animate-in fade-in duration-700">
     <div className={`bg-brand-card rounded-[5rem] w-full ${maxWidth} shadow-[0_100px_200px_-50px_rgba(0,0,0,0.6)] border-2 border-brand-border flex flex-col animate-in zoom-in-95 duration-700 overflow-hidden max-h-[92vh] relative group/modal`}>
@@ -35,9 +35,9 @@ export default function RelationsView({
   transactions = [], 
   onRecordPayment, 
   onAddCustomer, 
-  showToast, 
   formatIDR 
 }) {
+  const { notifySuccess } = useNotify();
   const [search, setSearch] = useState('');
   const [paymentModal, setPaymentModal] = useState(null);
   const [payAmount, setPayAmount] = useState('');
@@ -49,7 +49,7 @@ export default function RelationsView({
     
     const customersWithAr = customers.map(c => {
       const balance = c.balance || 0;
-      const receivables = balance < 0 ? Math.abs(balance) : 0;
+      const receivables = balance;
       totalReceivables += receivables;
       
       return {
@@ -71,7 +71,7 @@ export default function RelationsView({
     if (!amount || amount <= 0) return;
     
     onRecordPayment({
-      customer_id: paymentModal.id,
+      customer_id: paymentModal.receivable_id || paymentModal.id,
       amount: amount,
       payment_method: 'cash',
       notes: 'Pembayaran hutang melalui modul Pelanggan & Hutang'
@@ -79,7 +79,7 @@ export default function RelationsView({
     
     setPaymentModal(null);
     setPayAmount('');
-    showToast?.('PEMBAYARAN BERHASIL DICATAT', 'success');
+    notifySuccess('PEMBAYARAN BERHASIL DICATAT');
   };
 
   return (

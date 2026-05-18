@@ -6,10 +6,23 @@ const log = require('electron-log');
  */
 function getAllCustomers(includeInactive = false) {
     try {
-        if (includeInactive) {
-            return db.prepare('SELECT * FROM customers ORDER BY name ASC').all();
-        }
-        return db.prepare('SELECT * FROM customers WHERE is_active = 1 ORDER BY name ASC').all();
+        const query = `
+            SELECT c.*, 
+              COALESCE(
+                (SELECT SUM(r.amount - COALESCE((SELECT SUM(rp.amount) FROM receivable_payments rp WHERE rp.receivable_id = r.id), 0))
+                 FROM receivables r
+                 WHERE r.customer_id = c.id AND r.status IN ('outstanding', 'partial')
+                ), 0
+              ) AS balance,
+              (SELECT MIN(r.id) 
+               FROM receivables r 
+               WHERE r.customer_id = c.id AND r.status IN ('outstanding', 'partial')
+              ) AS receivable_id
+            FROM customers c
+            WHERE ${includeInactive ? '1=1' : 'c.is_active = 1'}
+            ORDER BY c.name ASC
+        `;
+        return db.prepare(query).all();
     } catch (err) {
         log.error(`getAllCustomers failed: ${err.message}`);
         return [];
