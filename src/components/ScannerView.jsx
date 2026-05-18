@@ -331,7 +331,7 @@ const ScannerView = () => {
             isStable ? 'bg-emerald-500/30 border-emerald-500/50 text-emerald-300' : 'bg-slate-800/80 border-slate-600 text-slate-300'
           }`}>
             {isStable ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-            <span className="font-semibold uppercase tracking-wider text-xs">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em]">
               {isStable ? 'Menganalisa...' : 'Tahan Perangkat...'}
             </span>
           </div>
@@ -348,7 +348,7 @@ const ScannerView = () => {
       {/* Offline Vault & Event Sourcing Panel - Terapkan Styling Design System */}
       <div className="mt-6 flex-grow flex flex-col min-h-[250px]">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-slate-300 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-slate-300 text-sm font-bold uppercase tracking-[0.3em] flex items-center gap-2">
             <Database size={16} className="text-blue-400" />
             Brankas Data Lokal
           </h3>
@@ -389,7 +389,7 @@ const ScannerView = () => {
                       <Barcode size={18} />
                     </div>
                     <div>
-                      <p className="font-mono text-white text-sm tracking-widest">{evt.barcode}</p>
+                      <p className="font-mono text-white text-sm tracking-[0.3em]">{evt.barcode}</p>
                       <p className="text-slate-400 text-xs">
                         {new Date(evt.timestamp).toLocaleTimeString('id-ID')} • Aksi: {evt.action.toUpperCase()}
                       </p>
