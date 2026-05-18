@@ -38,7 +38,7 @@ export default function Sidebar() {
     <nav className="hidden lg:flex w-24 bg-brand-card/30 backdrop-blur-3xl flex-col items-center py-10 shrink-0 z-[600] border-r border-brand-border/40 transition-all duration-1000 relative">
       
       {/* BRANDING NODE */}
-      <div className="mb-12 relative group">
+      <div className="mb-6 relative group">
          <div className="absolute inset-0 bg-brand-primary blur-2xl opacity-10 group-hover:opacity-30 transition-opacity"></div>
          <div className="w-14 h-14 bg-brand-primary rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl relative z-10 group-hover:rotate-12 transition-transform">
             <Zap size={28} />
@@ -46,12 +46,12 @@ export default function Sidebar() {
       </div>
 
       {/* NEURAL NAVIGATION SPINE */}
-      <div className="flex flex-col gap-4 flex-1 w-full px-5 overflow-y-auto hide-scrollbar">
+      <div className="flex flex-col gap-1.5 flex-1 w-full px-3 overflow-y-auto hide-scrollbar">
         {navItems.map(menu => (
           <button 
             key={menu.id} 
             onClick={() => onTabChange(menu.id)} 
-            className={`w-full py-5 rounded-[1.8rem] transition-all duration-500 flex flex-col items-center gap-2 group relative border ${
+            className={`w-full py-2.5 rounded-2xl transition-all duration-500 flex flex-col items-center gap-2 group relative border ${
               activeTab === menu.id 
                 ? 'bg-brand-primary/10 border-brand-primary/30 text-brand-primary shadow-[inset_0_0_20px_rgba(var(--brand-primary-rgb),0.1)]' 
                 : 'border-transparent text-brand-muted hover:text-brand-text hover:bg-brand-bg/50 hover:border-brand-border/50'
@@ -77,9 +77,9 @@ export default function Sidebar() {
       </div>
 
       {/* CORE UTILITY CLUSTER */}
-      <div className="mt-auto flex flex-col items-center gap-4 w-full px-5 pt-10 border-t border-brand-border/30">
+      <div className="mt-auto flex flex-col items-center gap-2 w-full px-3 pt-4 border-t border-brand-border/30">
          {activeSession && (
-           <button onClick={onOpenPettyCash} className="w-full py-5 rounded-[1.5rem] bg-brand-bg/50 border border-brand-border text-brand-muted hover:text-brand-secondary hover:border-brand-secondary/40 transition-all shadow-inner group" title="Kas Keluar (Petty Cash)">
+           <button onClick={onOpenPettyCash} className="w-full py-2.5 rounded-2xl bg-brand-bg/50 border border-brand-border text-brand-muted hover:text-brand-secondary hover:border-brand-secondary/40 transition-all shadow-inner group" title="Kas Keluar (Petty Cash)">
              <Wallet className="w-6 h-6 group-hover:scale-110 transition-transform"/>
            </button>
          )}
@@ -87,7 +87,7 @@ export default function Sidebar() {
          {(isOwner || isManager) && (
            <button 
              onClick={() => onTabChange('settings')} 
-             className={`w-full py-5 rounded-[1.8rem] transition-all duration-500 flex flex-col items-center gap-2 border ${
+             className={`w-full py-2.5 rounded-2xl transition-all duration-500 flex flex-col items-center gap-2 border ${
                activeTab === 'settings' 
                  ? 'bg-brand-primary/10 border-brand-primary/30 text-brand-primary shadow-[inset_0_0_20px_rgba(var(--brand-primary-rgb),0.1)]' 
                  : 'border-transparent text-brand-muted hover:text-brand-text hover:bg-brand-bg/50 hover:border-brand-border/50'
@@ -103,7 +103,7 @@ export default function Sidebar() {
           <div className="w-full flex flex-col items-center gap-3 mt-4">
             <button 
               onClick={logout} 
-              className="w-full py-5 rounded-[1.5rem] text-brand-muted hover:text-brand-primary hover:bg-brand-primary/5 transition-all flex flex-col items-center gap-2 group"
+              className="w-full py-2.5 rounded-2xl text-brand-muted hover:text-brand-primary hover:bg-brand-primary/5 transition-all flex flex-col items-center gap-2 group"
                title="Logout Session"
             >
               <LogOut className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
@@ -112,7 +112,7 @@ export default function Sidebar() {
             
             <button 
               onClick={() => window.api?.quitApp()} 
-              className="w-full py-5 rounded-[1.5rem] text-brand-muted/40 hover:text-rose-500 hover:bg-rose-500/5 transition-all flex flex-col items-center gap-2 group"
+              className="w-full py-2.5 rounded-2xl text-brand-muted/40 hover:text-rose-500 hover:bg-rose-500/5 transition-all flex flex-col items-center gap-2 group"
                title="Decommission Terminal"
             >
               <Power className="w-6 h-6 group-hover:scale-110 transition-transform" />
