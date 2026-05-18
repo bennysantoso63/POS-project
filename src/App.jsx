@@ -187,7 +187,14 @@ function AppContent({ fetchData, posData }) {
       case 'dashboard':    return <DashboardView transactions={transactions} products={products} formatIDR={formatIDR} />;
       case 'inventory':    return <InventoryView products={products} categories={categories} formatIDR={formatIDR} />;
       case 'history':      return <HistoryView transactions={transactions} formatIDR={formatIDR} />;
-      case 'crm':          return <CrmView customers={customers} formatIDR={formatIDR} />;
+      case 'crm':
+        return (
+          <CrmView
+            customers={customers}
+            onAddCustomer={handleAddCustomer}
+            formatIDR={formatIDR}
+          />
+        );
       case 'accounting':   
         return (
           <AccessGuard canAccess={isOwner || isManager} message="Modul Akuntansi hanya untuk Owner atau Manager.">
@@ -241,7 +248,6 @@ function AppContent({ fetchData, posData }) {
               transactions={transactions}
               onRecordPayment={handleRecordCustomerPayment}
               onAddCustomer={handleAddCustomer}
-              showToast={toast}
               formatIDR={formatIDR}
             />
           </AccessGuard>
