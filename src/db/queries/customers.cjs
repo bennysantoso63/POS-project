@@ -72,9 +72,16 @@ function updateCustomer(id, data) {
     }
 }
 
+function deleteCustomer(id) {
+  return db.prepare(
+    "UPDATE customers SET is_active=0 WHERE id=?"
+  ).run(id);
+}
+
 module.exports = {
     getAllCustomers,
     searchCustomers,
     createCustomer,
-    updateCustomer
+    updateCustomer,
+    deleteCustomer
 };

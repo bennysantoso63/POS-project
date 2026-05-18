@@ -190,6 +190,8 @@ function bootDeferredLogic() {
     // 👥 CRM & SUPPLIERS
     ipcMain.handle('api-get-customers', () => customers.getAllCustomers());
     ipcMain.handle('api-add-customer', (e, d) => customers.createCustomer(d));
+    ipcMain.handle('api-update-customer', (e, id, data) => customers.updateCustomer(id, data));
+    ipcMain.handle('api-delete-customer', (e, id) => customers.deleteCustomer(id));
     ipcMain.handle('api-get-suppliers', () => suppliers.getAllSuppliers());
     
     // 🚚 PURCHASING

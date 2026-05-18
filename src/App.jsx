@@ -126,6 +126,16 @@ function AppContent({ fetchData, posData }) {
     else toast.error(res?.error || "Gagal menambah pelanggan");
   };
 
+  const handleEditCustomer = async (id, data) => {
+    await window.api?.updateCustomer?.(id, data);
+    fetchData();
+  };
+
+  const handleDeleteCustomer = async (id) => {
+    await window.api?.deleteCustomer?.(id);
+    fetchData();
+  };
+
   const handleApplyAdjustments = async (items) => {
     const res = await window.api?.applyAdjustments?.(items, currentUser?.username);
     if (res?.success) { toast.success("Stok Berhasil Disesuaikan"); fetchData(); }
@@ -193,6 +203,8 @@ function AppContent({ fetchData, posData }) {
           <CrmView
             customers={customers}
             onAddCustomer={handleAddCustomer}
+            onEditCustomer={handleEditCustomer}
+            onDeleteCustomer={handleDeleteCustomer}
             formatIDR={formatIDR}
           />
         );

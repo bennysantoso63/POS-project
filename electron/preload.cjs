@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('api', {
     getCategories: () => ipcRenderer.invoke('api-get-categories'),
     getCustomers: () => ipcRenderer.invoke('api-get-customers'),
     addCustomer: (data) => ipcRenderer.invoke('api-add-customer', data),
+    updateCustomer: (id, data) => ipcRenderer.invoke('api-update-customer', id, data),
+    deleteCustomer: (id) => ipcRenderer.invoke('api-delete-customer', id),
     getSuppliers: () => ipcRenderer.invoke('api-get-suppliers'),
 
     // PURCHASING
