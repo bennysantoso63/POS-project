@@ -31,7 +31,9 @@ export default function IntelligenceView({
   };
 
   // RBAC Guard
-  if (currentUser?.role !== 'owner' && currentUser?.role !== 'admin') {
+  if (currentUser?.role !== 'owner' &&
+      currentUser?.role !== 'admin' &&
+      currentUser?.role !== 'manager') {
     return (
       <div className="h-full flex flex-col items-center justify-center p-12 text-center bg-brand-bg text-brand-text">
         <div className="w-24 h-24 bg-rose-500/10 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl">
