@@ -203,6 +203,13 @@ function bootDeferredLogic() {
     const expenses = require('../src/db/queries/expenses.cjs');
     const receivables = require('../src/db/queries/receivables.cjs');
     ipcMain.handle('api-record-expense', (e, d) => expenses.createExpense(d));
+    ipcMain.handle('api-get-expenses', async () => {
+      try {
+        return expenses.getAllExpenses();
+      } catch(e) {
+        return [];
+      }
+    });
     ipcMain.handle('api-record-payment', (e, id, d, sid) => receivables.recordPayment(id, d, sid));
     ipcMain.handle('api-get-movements', (e, pid) => products.getStockMovements(pid));
     ipcMain.handle('api-apply-adjustments', (e, items, userId) => {

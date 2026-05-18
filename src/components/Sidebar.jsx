@@ -35,7 +35,7 @@ export default function Sidebar() {
   ].filter(item => item.show);
 
   return (
-    <nav className="hidden lg:flex w-24 bg-brand-card/30 backdrop-blur-3xl flex-col items-center py-10 shrink-0 z-[600] border-r border-brand-border/40 transition-all duration-1000 relative">
+    <nav className="hidden lg:flex w-24 h-full bg-brand-card/30 backdrop-blur-3xl flex-col items-center py-10 shrink-0 z-[600] border-r border-brand-border/40 transition-all duration-1000 relative">
       
       {/* BRANDING NODE */}
       <div className="mb-6 relative group">
@@ -46,7 +46,7 @@ export default function Sidebar() {
       </div>
 
       {/* NEURAL NAVIGATION SPINE */}
-      <div className="flex flex-col gap-1.5 flex-1 w-full px-3 overflow-y-auto hide-scrollbar">
+      <div className="flex flex-col gap-1.5 flex-1 w-full px-3 overflow-y-auto custom-scrollbar pb-6">
         {navItems.map(menu => (
           <button 
             key={menu.id} 

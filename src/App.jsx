@@ -83,7 +83,7 @@ function AppContent({ fetchData, posData }) {
   const [showPettyCash, setShowPettyCash] = useState(false);
   const [monitoringSubTab, setMonitoringSubTab] = useState('sessions');
 
-  const { products, customers, transactions, settings, categories, sessions, movements } = posData;
+  const { products, customers, transactions, expenses, settings, categories, sessions, movements } = posData;
 
   const handleCreatePO = async (data) => {
     const res = await window.api?.createPO?.(data);
@@ -190,7 +190,12 @@ function AppContent({ fetchData, posData }) {
       case 'accounting':   
         return (
           <AccessGuard canAccess={isOwner || isManager} message="Modul Akuntansi hanya untuk Owner atau Manager.">
-             <AccountingView transactions={transactions} />
+             <AccountingView
+               transactions={transactions}
+               expenses={expenses}
+               products={products}
+               settings={settings}
+             />
           </AccessGuard>
         );
       case 'intelligence': 

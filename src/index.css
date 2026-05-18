@@ -48,3 +48,102 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Hide scrollbar for components using hide-scrollbar */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom Scrollbar - Premium, Ultra-Thin, Sleek Modern Aesthetics (Apple macOS Style) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px; /* Extremely thin macOS width */
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Trackless */
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent; /* Hidden by default */
+  border-radius: 9999px;
+  transition: background 0.3s ease;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.25); /* Fades in on container hover */
+}
+.dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.45) !important; /* Highlights on direct hover */
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.45) !important;
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent; /* Firefox fallback hidden by default */
+  transition: scrollbar-color 0.3s ease;
+}
+.custom-scrollbar:hover {
+  scrollbar-color: rgba(15, 23, 42, 0.25) transparent;
+}
+.dark .custom-scrollbar:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+/* --- PREMIUM TAILWIND ANIMATION UTILITIES EMULATOR --- */
+@keyframes premium-enter {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: 
+      translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0) 
+      scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), 1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+.animate-in {
+  animation: premium-enter var(--tw-animate-duration, 0.3s) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Durations */
+.duration-200 { --tw-animate-duration: 0.2s; }
+.duration-300 { --tw-animate-duration: 0.3s; }
+.duration-500 { --tw-animate-duration: 0.5s; }
+.duration-700 { --tw-animate-duration: 0.7s; }
+.duration-1000 { --tw-animate-duration: 1s; }
+
+/* Opacity States */
+.fade-in { --tw-enter-opacity: 0; }
+
+/* Scale States */
+.zoom-in { --tw-enter-scale: 0; }
+.zoom-in-50 { --tw-enter-scale: 0.5; }
+.zoom-in-95 { --tw-enter-scale: 0.95; }
+
+/* Translates (Slide-ins) */
+.slide-in-from-top-2 { --tw-enter-translate-y: -0.5rem; }
+.slide-in-from-top-4 { --tw-enter-translate-y: -1rem; }
+.slide-in-from-top-8 { --tw-enter-translate-y: -2rem; }
+
+.slide-in-from-bottom-2 { --tw-enter-translate-y: 0.5rem; }
+.slide-in-from-bottom-4 { --tw-enter-translate-y: 1rem; }
+.slide-in-from-bottom-8 { --tw-enter-translate-y: 2rem; }
+.slide-in-from-bottom-12 { --tw-enter-translate-y: 3rem; }
+.slide-in-from-bottom-20 { --tw-enter-translate-y: 5rem; }
+
+.slide-in-from-left-4 { --tw-enter-translate-x: -1rem; }
+.slide-in-from-left-8 { --tw-enter-translate-x: -2rem; }
+.slide-in-from-left-full { --tw-enter-translate-x: -100%; }
+
+.slide-in-from-right-4 { --tw-enter-translate-x: 1rem; }
+.slide-in-from-right-8 { --tw-enter-translate-x: 2rem; }
+.slide-in-from-right-12 { --tw-enter-translate-x: 3rem; }

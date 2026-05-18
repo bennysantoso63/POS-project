@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('api', {
 
     // EXPENSES, RECEIVABLES & MOVEMENTS
     recordExpense: (data) => ipcRenderer.invoke('api-record-expense', data),
+    getExpenses: () => ipcRenderer.invoke('api-get-expenses'),
     recordPayment: (id, data, sessionId) => ipcRenderer.invoke('api-record-payment', id, data, sessionId),
     getMovements: (productId) => ipcRenderer.invoke('api-get-movements', productId),
     applyAdjustments: (items, userId) => ipcRenderer.invoke('api-apply-adjustments', items, userId),
