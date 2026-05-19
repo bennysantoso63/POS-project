@@ -60,8 +60,17 @@ export default function AccountingView({
     const taxRate = (settings.tax_rate || 0.5) / 100;
     const estimatedTax = totalRevenue * taxRate;
 
-    return { totalRevenue, totalCogs, totalOpex, grossProfit, netProfit, estimatedTax };
+    const sinkingFundRate =
+      parseFloat(settings.sinking_fund_rate || 10) / 100;
+    const netProfitAfterTax = netProfit - estimatedTax;
+    const sinkingFundAllocation = netProfitAfterTax > 0
+      ? Math.round(netProfitAfterTax * sinkingFundRate)
+      : 0;
+
+    return { totalRevenue, totalCogs, totalOpex, grossProfit, netProfit, estimatedTax, sinkingFundAllocation, sinkingFundRate, netProfitAfterTax };
   }, [transactions, expenses, products, month, year, settings.tax_rate]);
+
+  const { sinkingFundAllocation, sinkingFundRate } = report;
 
   return (
     <div className="flex-1 p-10 md:p-20 overflow-y-auto custom-scrollbar bg-brand-bg text-brand-text font-sans h-full relative">
@@ -289,6 +298,28 @@ export default function AccountingView({
                 Laporan keuangan dienkripsi dan disimpan aman di komputer lokal Anda.
               </p>
             </div>
+          </div>
+
+          <div className="bg-brand-card/40 backdrop-blur-xl border-2 border-brand-border rounded-[2rem] p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-emerald-500/10 rounded-2xl">
+                <Landmark className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="font-black text-brand-text">
+                  Dana Cadangan
+                </h3>
+                <p className="text-[10px] text-brand-muted tracking-[0.3em] uppercase">
+                  Sinking Fund — Alokasi {Math.round(sinkingFundRate * 100)}%
+                </p>
+              </div>
+            </div>
+            <p className="text-3xl font-black text-emerald-500 mb-2">
+              {formatIDR(sinkingFundAllocation)}
+            </p>
+            <p className="text-[10px] text-brand-muted opacity-60 tracking-[0.2em] uppercase">
+              Alokasi bulan ini dari laba bersih setelah pajak
+            </p>
           </div>
 
           {/* STRATEGIC FISCAL HEALTH INSIGHT */}
