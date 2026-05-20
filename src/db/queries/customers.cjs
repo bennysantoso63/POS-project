@@ -17,7 +17,15 @@ function getAllCustomers(includeInactive = false) {
               (SELECT MIN(r.id) 
                FROM receivables r 
                WHERE r.customer_id = c.id AND r.status IN ('outstanding', 'partial')
-              ) AS receivable_id
+              ) AS receivable_id,
+              (SELECT rfm_label FROM customer_rfm
+               WHERE customer_id = c.id
+               ORDER BY computed_at DESC LIMIT 1
+              ) AS rfm_label,
+              (SELECT rfm_score FROM customer_rfm
+               WHERE customer_id = c.id
+               ORDER BY computed_at DESC LIMIT 1
+              ) AS rfm_score
             FROM customers c
             WHERE ${includeInactive ? '1=1' : 'c.is_active = 1'}
             ORDER BY c.name ASC

@@ -82,6 +82,14 @@ export default function RelationsView({
     notifySuccess('PEMBAYARAN BERHASIL DICATAT');
   };
 
+  const RFM_BADGE = {
+    vip:       { label: '👑 Donatur Emas',    color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
+    loyal:     { label: '🔥 Umat Aktif',      color: 'bg-rose-500/10 text-rose-500 border-rose-500/20' },
+    potential: { label: '✨ Umat Potensial',  color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+    at_risk:   { label: '⚠️ Perlu Sapaan',   color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
+    churned:   { label: '💤 Tidak Aktif',     color: 'bg-slate-500/10 text-slate-500 border-slate-500/20' },
+  };
+
   return (
     <div className="flex-1 p-10 md:p-20 overflow-y-auto custom-scrollbar bg-brand-bg text-brand-text font-sans h-full relative">
       
@@ -248,7 +256,14 @@ export default function RelationsView({
                                 <Users size={32} className="relative z-10" />
                              </div>
                              <div>
-                                <p className="font-bold text-2xl tracking-tighter group-hover/row:text-brand-accent transition-colors mb-2 leading-none">{c.name}</p>
+                                <p className="font-bold text-2xl tracking-tighter group-hover/row:text-brand-accent transition-colors mb-2 leading-none flex items-center gap-2">
+                                  {c.name}
+                                  {c.rfm_label && RFM_BADGE[c.rfm_label] && (
+                                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-lg border tracking-[0.2em] uppercase ${RFM_BADGE[c.rfm_label].color}`}>
+                                      {RFM_BADGE[c.rfm_label].label}
+                                    </span>
+                                  )}
+                                </p>
                                 <div className="flex items-center gap-4">
                                    <div className={`w-2 h-2 rounded-full ${isSettled ? 'bg-emerald-500' : isCritical ? 'bg-rose-500 animate-pulse' : 'bg-amber-500'} `}></div>
                                    <p className="text-[10px] font-bold text-brand-muted tracking-widest opacity-50 flex items-center gap-3">
