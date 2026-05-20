@@ -1,17 +1,79 @@
 const escpos = require('escpos');
-escpos.USB = require('escpos-usb');
+const fs = require('fs');
+
+// ─────────────────────────────────────────────────────────────
+// SerialDevice — Node fs built-in, tanpa npm package tambahan
+// Windows: akses COM port via \\.\COM3
+// Linux/Mac: akses via /dev/ttyUSB0 dst.
+// ─────────────────────────────────────────────────────────────
+class SerialDevice {
+    constructor(port) {
+        this.port = port || 'COM3';
+        this.stream = null;
+    }
+
+    open(callback) {
+        try {
+            const portPath = process.platform === 'win32'
+                ? `\\\\.\\${this.port}`
+                : this.port;
+            this.stream = fs.createWriteStream(portPath, { flags: 'w' });
+            this.stream.once('error', (err) => {
+                this.stream = null;
+                callback(err);
+            });
+            this.stream.once('open', () => callback(null));
+        } catch (err) {
+            this.stream = null;
+            callback(err);
+        }
+    }
+
+    write(data, callback) {
+        if (!this.stream) {
+            if (callback) callback(new Error('Serial port not open'));
+            return;
+        }
+        this.stream.write(data, callback);
+    }
+
+    close(callback) {
+        if (!this.stream) {
+            if (callback) callback();
+            return;
+        }
+        this.stream.end(callback);
+        this.stream = null;
+    }
+}
+
+// Baca COM port dari DB settings, fallback ke COM3
+const getComPortFromDb = () => {
+    try {
+        const db = require('../db/db.cjs');
+        const row = db.prepare("SELECT value FROM settings WHERE key = 'printer_com_port'").get();
+        return row?.value || 'COM3';
+    } catch (e) {
+        console.warn('[PrinterService] Gagal baca settings DB, fallback COM3:', e.message);
+        return 'COM3';
+    }
+};
 
 const printReceipt = async (txData, settings) => {
     return new Promise((resolve) => {
         try {
-            const device = new escpos.USB();
+            const comPort = settings?.printer_com_port || getComPortFromDb();
+            const device = new SerialDevice(comPort);
             const options = { encoding: "GB18030" /* standard for many printers */ };
             const printer = new escpos.Printer(device, options);
 
             device.open(function (error) {
                 if (error) {
                     console.error('Printer Error:', error);
-                    return resolve({ success: false, error: 'Thermal Printer not detected or busy.' });
+                    return resolve({
+                        success: false,
+                        error: `Serial printer tidak terdeteksi di ${comPort}. Cek COM port di Settings.`
+                    });
                 }
 
                 printer
@@ -19,11 +81,11 @@ const printReceipt = async (txData, settings) => {
                     .align('ct')
                     .style('bu')
                     .size(1, 1)
-                    .text(settings.name || 'LING-LING POS')
+                    .text(settings?.name || 'LING-LING POS')
                     .size(0, 0)
-                    .text(settings.slogan || 'Your Trusted Business Partner')
-                    .text(settings.address || '')
-                    .text(settings.phone || '')
+                    .text(settings?.slogan || 'Your Trusted Business Partner')
+                    .text(settings?.address || '')
+                    .text(settings?.phone || '')
                     .text('--------------------------------')
                     .align('lt')
                     .text(`Date: ${new Date().toLocaleString()}`)
@@ -54,7 +116,7 @@ const printReceipt = async (txData, settings) => {
                     .text(`CHANGE: ${txData.change_amount}`)
                     .align('ct')
                     .text(' ')
-                    .text(settings.receiptFooter || 'THANK YOU FOR YOUR PATRONAGE')
+                    .text(settings?.receiptFooter || 'THANK YOU FOR YOUR PATRONAGE')
                     .text(' ')
                     .cut()
                     .close();
