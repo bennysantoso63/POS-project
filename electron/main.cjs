@@ -161,6 +161,13 @@ function bootDeferredLogic() {
     const customers = require('../src/db/queries/customers.cjs');
     const suppliers = require('../src/db/queries/suppliers.cjs');
     const intelligence = require('../src/db/queries/intelligence.cjs');
+    const log = require('electron-log');
+    try {
+        intelligence.recalculateInsights();
+        log.info('[LING-LING] Insights pre-computed.');
+    } catch(e) {
+        log.warn('[LING-LING] Recalc skipped:', e.message);
+    }
     const excelSyncQueries = require('../src/db/queries/excelSync.cjs');
     const googleSyncQueries = require('../src/db/queries/googleSync.cjs');
     // const sembahyangQueries = require('../src/db/queries/sembahyang.cjs'); // DEPRECATED: Consolidated into dsEngine
