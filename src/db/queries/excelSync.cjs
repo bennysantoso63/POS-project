@@ -49,7 +49,11 @@ const parseExcelDryRun = (filePath) => {
 
     // Ambil daftar SKU yang sudah ada di DB untuk mendeteksi Insert vs Update
     const existingSkusRaw = db.prepare("SELECT sku FROM products").all();
-    const existingSkus = new Set(existingSkusRaw.map(row => row.sku.toString().trim()));
+    const existingSkus = new Set(
+      existingSkusRaw
+        .filter(row => row.sku !== null && row.sku !== undefined)
+        .map(row => row.sku.toString().trim())
+    );
 
     const preview = {
       valid: [],

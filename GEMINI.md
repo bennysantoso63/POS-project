@@ -1,10 +1,9 @@
 # GEMINI.md — Ling-Ling POS
-# Behavioral Constitution v2.1 — Cost Efficiency Era
-# 2026-05-20 — Post Antigravity 2.0
+# Behavioral Constitution v2.2 — Cost Efficiency Era
+# 2026-05-22 — Post Antigravity 2.0
 
 ## PERAN
 Precise Executor. Paranoid terhadap scope creep.
-Flash Medium = default. Tidak perlu dipaksa.
 
 ## PROJECT
 Stack: Electron + React + SQLite + Vite
@@ -64,7 +63,5 @@ Escalation: YES/NO
 [/SESSION_REPORT]
 
 ## VERSI
-v1.0-1.4 — 2026-05-17/18 — Full constitution era
-v1.5 — 2026-05-20 — Patch: auto model tier upgrade statement
-v2.0 — 2026-05-20 — Cost efficiency era: pangkas dari 5 hukum → 3 hukum utama
 v2.1 — 2026-05-20 — Cost efficiency era dengan revisi: intent lock, negative constraints dikembalikan
+v2.2 — 2026-05-22 — Pangkas redundant lines (Flash Medium & legacy versions)

@@ -36,17 +36,7 @@ export default function DashboardView({
   const setStats = useAnalyticsStore((state) => state.setStats);
 
   // 🚀 TAHAP 3: Optimized Computation Engine
-  const summary = useMemo(() => {
-    // Jika cache tersedia dan tidak basi, gunakan cache
-    if (!isStatsStale && statsCache) {
-      return statsCache;
-    }
-
-    // Jika basi atau pertama kali, lakukan kalkulasi (akan di-cache setelah ini)
-    let totalRevenue = 0;
-    let totalCogs = 0;
-    let totalOrders = 0;
-    
+  const filteredTransactions = useMemo(() => {
     const isWithinRange = (dateStr) => {
       if (!dateStr) return false;
       const d = new Date(dateStr);
@@ -76,17 +66,23 @@ export default function DashboardView({
       return true;
     };
 
+    return transactions.filter(t => t.status !== 'void' && isWithinRange(t.created_at || t.date));
+  }, [transactions, timeRange, customRange]);
+
+  const summary = useMemo(() => {
+    let totalRevenue = 0;
+    let totalCogs = 0;
+    let totalOrders = 0;
+
     try {
-      transactions.forEach(tx => {
-        if (tx.status !== 'void' && isWithinRange(tx.created_at || tx.date)) {
-          totalRevenue += (tx.total || 0);
-          totalOrders += 1;
-          if (Array.isArray(tx.items)) {
-            tx.items.forEach(item => {
-              const prod = products.find(p => p.id === item.product_id);
-              totalCogs += (item.qty || 0) * (item.cost_price || prod?.cost_price || 0);
-            });
-          }
+      filteredTransactions.forEach(tx => {
+        totalRevenue += (tx.total || 0);
+        totalOrders += 1;
+        if (Array.isArray(tx.items)) {
+          tx.items.forEach(item => {
+            const prod = products.find(p => p.id === item.product_id);
+            totalCogs += (item.qty || 0) * (item.cost_price || prod?.cost_price || 0);
+          });
         }
       });
     } catch (err) {
@@ -105,7 +101,7 @@ export default function DashboardView({
     setTimeout(() => setStats(calculated), 0);
 
     return calculated;
-  }, [transactions, products, timeRange, statsCache, isStatsStale, setStats]);
+  }, [filteredTransactions, products, setStats]);
 
   const TARGET_BEP = 25000000;
   const progressPct = Math.min(100, (summary.totalRevenue / TARGET_BEP) * 100);
@@ -116,6 +112,22 @@ export default function DashboardView({
         <div className="bg-brand-card/90 backdrop-blur-2xl border border-brand-border p-6 rounded-[2rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]">
           <p className="text-[9px] font-black text-brand-muted tracking-wider mb-3">{label || 'Titik Data'}</p>
           <p className="text-xl font-black text-brand-primary tracking-tighter">{formatIDR(payload[0].value)}</p>
+          <div className="mt-3 pt-3 border-t border-brand-border flex items-center gap-2">
+             <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></div>
+             <span className="text-[8px] font-bold text-brand-muted tracking-widest">Sinkronisasi Langsung</span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const PieTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-brand-card/90 backdrop-blur-2xl border border-brand-border p-6 rounded-[2rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]">
+          <p className="text-[9px] font-black text-brand-muted tracking-wider mb-3">{payload[0].name || 'Metode'}</p>
+          <p className="text-xl font-black text-brand-primary tracking-tighter">{payload[0].value} Transaksi</p>
           <div className="mt-3 pt-3 border-t border-brand-border flex items-center gap-2">
              <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></div>
              <span className="text-[8px] font-bold text-brand-muted tracking-widest">Sinkronisasi Langsung</span>
@@ -232,7 +244,7 @@ export default function DashboardView({
           </div>
           <div className="min-h-[350px] lg:min-h-[450px] w-full relative z-10 pr-4">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={transactions.filter(t => t.status !== 'void').slice(-30)}>
+              <AreaChart data={filteredTransactions}>
                 <defs>
                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--brand-primary)" stopOpacity={0.4}/>
@@ -254,7 +266,7 @@ export default function DashboardView({
                 />
               </AreaChart>
             </ResponsiveContainer>
-            {(!transactions || transactions.filter(t => t.status !== 'void').length === 0) && (
+            {(!filteredTransactions || filteredTransactions.length === 0) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-card/20 backdrop-blur-[2px] rounded-[3rem] z-20">
                 <Activity size={40} className="text-brand-muted mb-4 opacity-20" />
                 <p className="text-[10px] font-bold text-brand-muted tracking-wider opacity-40">Belum ada data transaksi</p>
@@ -282,9 +294,9 @@ export default function DashboardView({
                 <PieChart>
                    <Pie
                       data={[
-                        { name: 'Tunai', value: transactions.filter(t => t.payment_method === 'cash').length },
-                        { name: 'Transfer', value: transactions.filter(t => t.payment_method === 'transfer').length },
-                        { name: 'Kasbon', value: transactions.filter(t => t.payment_method === 'kasbon').length },
+                        { name: 'Tunai', value: filteredTransactions.filter(t => t.payment_method === 'cash').length },
+                        { name: 'Transfer', value: filteredTransactions.filter(t => t.payment_method === 'transfer' || t.payment_method === 'qris' || t.payment_method === 'qris_manual').length },
+                        { name: 'Kasbon', value: filteredTransactions.filter(t => t.payment_method === 'kasbon' || t.payment_method === 'receivable').length },
                       ]}
                       cx="50%"
                       cy="50%"
@@ -297,10 +309,10 @@ export default function DashboardView({
                       <Cell fill="#8b5cf6" />
                       <Cell fill="#f59e0b" />
                    </Pie>
-                   <RechartsTooltip content={<CustomTooltip />} />
+                   <RechartsTooltip content={<PieTooltip />} />
                 </PieChart>
              </ResponsiveContainer>
-             {(!transactions || transactions.filter(t => ['cash', 'transfer', 'kasbon'].includes(t.payment_method)).length === 0) && (
+             {(!filteredTransactions || filteredTransactions.length === 0) && (
                <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-card/20 backdrop-blur-[2px] rounded-[3rem] z-20">
                  <PieChartIcon size={40} className="text-brand-muted mb-4 opacity-20" />
                  <p className="text-[10px] font-bold text-brand-muted tracking-wider opacity-40">Data kosong</p>

@@ -146,11 +146,14 @@ class LingLingDataScience {
 
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS apriori_rules (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          primary_item_id INTEGER,
-          secondary_item_id INTEGER,
-          confidence_pct INTEGER,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          id              INTEGER PRIMARY KEY AUTOINCREMENT,
+          item_a_id       INTEGER NOT NULL REFERENCES products(id),
+          item_b_id       INTEGER NOT NULL REFERENCES products(id),
+          support         REAL NOT NULL DEFAULT 0.0,
+          confidence_pct  INTEGER NOT NULL,
+          lift            REAL NOT NULL DEFAULT 1.0,
+          computed_at     TEXT DEFAULT (datetime('now','localtime')),
+          CHECK(item_a_id != item_b_id)
         )
       `);
 
@@ -170,7 +173,7 @@ class LingLingDataScience {
       `).all();
 
       this.db.prepare("DELETE FROM apriori_rules").run();
-      const insertRule = this.db.prepare("INSERT INTO apriori_rules (primary_item_id, secondary_item_id, confidence_pct) VALUES (?, ?, ?)");
+      const insertRule = this.db.prepare("INSERT INTO apriori_rules (item_a_id, item_b_id, confidence_pct, support, lift) VALUES (?, ?, ?, 0.1, 1.0)");
 
       this.db.transaction(() => {
         for (const rule of rules) {
@@ -195,8 +198,8 @@ class LingLingDataScience {
       const stmt = this.db.prepare(`
         SELECT p.id, p.name, p.price_retail as price, a.confidence_pct
         FROM apriori_rules a
-        JOIN products p ON a.secondary_item_id = p.id
-        WHERE a.primary_item_id = ?
+        JOIN products p ON a.item_b_id = p.id
+        WHERE a.item_a_id = ?
         ORDER BY a.confidence_pct DESC
         LIMIT 1
       `);

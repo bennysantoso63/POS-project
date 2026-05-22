@@ -14,10 +14,10 @@ const CustomDropdown = ({ value, onChange, options, label, icon, type = "button"
       <button 
         type={type}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-white/60 dark:bg-white/10 backdrop-blur-md border-2 border-brand-border/50 rounded-[2rem] pl-14 pr-10 py-5 text-[11px] font-bold tracking-wider outline-none flex items-center justify-between hover:border-brand-primary/40 transition-all text-left shadow-sm hover:bg-white/80 dark:hover:bg-white/20"
+        className={`w-full bg-white/60 dark:bg-white/10 backdrop-blur-md border-2 border-brand-border/50 rounded-[2rem] ${icon ? 'pl-12' : 'pl-6'} pr-8 py-5 text-[11px] font-bold tracking-wider outline-none flex items-center justify-between hover:border-brand-primary/40 transition-all text-left shadow-sm hover:bg-white/80 dark:hover:bg-white/20`}
       >
         <div className="flex items-center gap-4">
-          <div className="text-brand-muted group-hover:text-brand-primary transition-colors">{icon}</div>
+          {icon && <div className="text-brand-muted group-hover:text-brand-primary transition-colors">{icon}</div>}
           <span className="truncate">{displayValue}</span>
         </div>
         <ChevronDown size={14} className={`text-brand-muted transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />

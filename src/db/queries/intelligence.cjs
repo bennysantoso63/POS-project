@@ -1,4 +1,4 @@
-const getDb = require('../db.cjs');
+const db = require('../db.cjs');
 
 // Template fallback default jika AI tidak mengenali intent
 const DEFAULT_RESPONSE = {
@@ -15,7 +15,6 @@ const DEFAULT_RESPONSE = {
  * Memiliki mekanisme stale-tolerance 1 jam (3600000 ms) agar tidak membebani UI.
  */
 function recalculateInsights() {
-  const db = getDb();
   
   // 1. Inisialisasi tabel jika belum ada (Safe Migration)
   db.exec(`
@@ -107,7 +106,6 @@ function recalculateInsights() {
  * Membaca data yang sudah di-precompute untuk latensi mendekati 0ms.
  */
 function askLingLing(question) {
-  const db = getDb();
   const q = question.toLowerCase();
 
   // ROUTER 1: INTENT STOK MATI (Capital Trap)
@@ -239,18 +237,125 @@ function askLingLing(question) {
 }
 
 // ------------------------------------------------------------------
-// STUBS FOR EXISTING IPC HANDLERS (Agar main.cjs tidak error crash)
-// Fungsi-fungsi ini menjaga kompatibilitas dengan UI yang lama
+// IMPLEMENTASI REAL UNTUK IPC HANDLERS
+// Fungsi-fungsi ini mengambil data dari database SQLite secara real-time
 // ------------------------------------------------------------------
-function getBundlingSuggestion() { return []; }
-function getRFMMatrix() { return []; }
-function getAprioriRules() { return []; }
-function getBurnRateAlerts() { return []; }
-function getSembahyangBigBang() { return []; }
+const RFM_MAP = {
+  vip:       { badge: '👑 VIP',       color: 'bg-brand-primary/10 text-brand-primary border-brand-primary/20' },
+  loyal:     { badge: '⭐ Loyal',     color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+  potential: { badge: '📈 Potential', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+  at_risk:   { badge: '⚠️ At Risk',  color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
+  churned:   { badge: '❌ Churned',   color: 'bg-rose-500/10 text-rose-500 border-rose-500/20' }
+};
+
+function getBundlingSuggestion(productId) {
+  if (!productId) return null;
+  try {
+    return db.prepare(`
+      SELECT p.id, p.name, p.price_retail as price, a.confidence_pct
+      FROM apriori_rules a
+      JOIN products p ON a.item_b_id = p.id
+      WHERE a.item_a_id = ?
+      ORDER BY a.confidence_pct DESC
+      LIMIT 1
+    `).get(productId) || null;
+  } catch (e) { return null; }
+}
+
+function getRFMMatrix() {
+  try {
+    const rows = db.prepare(`
+      SELECT rfm.*, c.name
+      FROM customer_rfm rfm
+      JOIN customers c ON rfm.customer_id = c.id
+      ORDER BY rfm.monetary DESC
+    `).all();
+    return rows.map(r => {
+      const map = RFM_MAP[r.rfm_label] || { badge: '❓ Unknown', color: 'bg-gray-500/10 text-gray-500' };
+      return { id: r.customer_id, name: r.name, totalSpent: r.monetary, badge: map.badge, color: map.color };
+    });
+  } catch (e) { return []; }
+}
+
+function getAprioriRules() {
+  try {
+    return db.prepare(`
+      SELECT ar.*, p1.name as item_a_name, p2.name as item_b_name
+      FROM apriori_rules ar
+      JOIN products p1 ON ar.item_a_id = p1.id
+      JOIN products p2 ON ar.item_b_id = p2.id
+      ORDER BY ar.lift DESC, ar.confidence_pct DESC
+    `).all();
+  } catch (e) { return []; }
+}
+
+function getBurnRateAlerts() {
+  try {
+    const rows = db.prepare(`
+      SELECT p.id, p.name, p.stock_pcs, p.low_stock_threshold,
+        COALESCE(s.total_sold, 0) AS total_sold_30d
+      FROM products p
+      LEFT JOIN (
+        SELECT ti.product_id, SUM(ti.qty) AS total_sold
+        FROM transaction_items ti
+        JOIN transactions t ON ti.transaction_id = t.id
+        WHERE t.status = 'completed' AND t.created_at >= date('now', '-30 days')
+        GROUP BY ti.product_id
+      ) s ON s.product_id = p.id
+      WHERE p.stock_pcs > 0
+      ORDER BY p.stock_pcs ASC
+    `).all();
+    return rows.map(r => {
+      const daily_velocity = r.total_sold_30d / 30;
+      const daysLeft = daily_velocity > 0 ? Math.floor(r.stock_pcs / daily_velocity) : 999;
+      return { id: r.id, name: r.name, stock: r.stock_pcs, velocity: daily_velocity.toFixed(1), daysLeft, daily_velocity };
+    }).filter(r => r.daysLeft <= 30).sort((a, b) => a.daysLeft - b.daysLeft);
+  } catch (e) { return []; }
+}
+
+function getSembahyangBigBang() {
+  try {
+    const { Lunar } = require('lunar-javascript');
+    const events = [];
+    const today = new Date();
+    const FESTIVALS = [
+      { month: 1, day: 1, name: "Tahun Baru Imlek (Sincia)", score: 10 },
+      { month: 1, day: 15, name: "Cap Go Meh (Festival Lampion)", score: 9 },
+      { month: 5, day: 5, name: "Festival Peh Cun (Bak Cang)", score: 7 },
+      { month: 7, day: 15, name: "Sembahyang Rebutan (Zhong Yuan)", score: 9 },
+      { month: 8, day: 15, name: "Festival Kue Bulan (Zhong Qiu)", score: 8 },
+    ];
+    for (let i = 0; i < 180; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const lunar = Lunar.fromDate(d);
+      const lm = lunar.getMonth();
+      const ld = lunar.getDay();
+      const festival = FESTIVALS.find(f => f.month === lm && f.day === ld);
+      if (festival) {
+        events.push({
+          gregorian_date: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+          ritual_name: festival.name,
+          lunar_date: `${lm}/${ld} Imlek`,
+          intensity_score: festival.score
+        });
+      } else if (ld === 1 || ld === 15) {
+        events.push({
+          gregorian_date: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+          ritual_name: ld === 1 ? `Ce It (Bulan ${lm} Imlek)` : `Cap Go (Bulan ${lm} Imlek)`,
+          lunar_date: `${lm}/${ld} Imlek`,
+          intensity_score: 6
+        });
+      }
+      if (events.length >= 6) break;
+    }
+    return events;
+  } catch (e) { return []; }
+}
 
 module.exports = {
-  recalculateInsights, // Export agar bisa dipanggil saat boot/polling
-  askLingLing,         // Otak utama untuk Chat UI
+  recalculateInsights,
+  askLingLing,
   getBundlingSuggestion,
   getRFMMatrix,
   getAprioriRules,

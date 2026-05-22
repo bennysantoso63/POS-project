@@ -4,7 +4,7 @@ import {
   Box, Power, Clock, ShieldCheck, Zap
 } from 'lucide-react';
 
-export default function CockpitLayout({ children, userRole, terminalName, onTabChange }) {
+export default function CockpitLayout({ children, userRole, terminalName, onTabChange, products = [] }) {
   // --- STATE MANAGEMENT ---
   const [time, setTime] = useState(new Date());
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -12,7 +12,7 @@ export default function CockpitLayout({ children, userRole, terminalName, onTabC
   
   // Simulasi state status (Nanti dihubungkan ke State Global)
   const [syncStatus, setSyncStatus] = useState('SUCCESS');
-  const [stockAlerts, setStockAlerts] = useState(3);
+  const stockAlerts = products.filter(p => p.stock_pcs <= (p.low_stock_threshold ?? 5)).length;
   const [isDbSaving, setIsDbSaving] = useState(false);
 
   const searchInputRef = useRef(null);
@@ -83,16 +83,6 @@ export default function CockpitLayout({ children, userRole, terminalName, onTabC
 
         {/* Kanan: Cluster Status */}
         <div className="flex items-center gap-6">
-          {/* Cloud Sync Indicator */}
-          <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-brand-bg/50 transition-colors cursor-help group" title="Google Drive Sync Status">
-            <Cloud 
-              className={`w-4 h-4 ${syncStatus === 'SYNCING' ? 'text-brand-primary animate-pulse' : syncStatus === 'ERROR' ? 'text-rose-500' : 'text-emerald-500'} group-hover:scale-110 transition-transform`} 
-            />
-            <span className={`font-black tracking-widest ${syncStatus === 'ERROR' ? 'text-rose-500' : 'text-emerald-500'} opacity-70`}>
-              {syncStatus === 'SYNCING' ? 'Uploading' : syncStatus === 'ERROR' ? 'Offline' : 'Synced'}
-            </span>
-          </div>
-
           {/* Alert Indicator */}
           <div 
             onClick={() => handleCommand('dashboard')}

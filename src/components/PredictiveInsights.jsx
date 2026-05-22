@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Flame, Moon, AlertTriangle, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function PredictiveInsights({ 
@@ -9,37 +9,76 @@ export default function PredictiveInsights({
   // =========================================================================
   // 🧠 DATA SCIENCE ENGINE 1: Inventory Burn-Rate (Velocity Analysis)
   // =========================================================================
-  const burnRateAlerts = useMemo(() => {
-    // Simulasi: Mengambil 3 produk dengan rasio "Sisa Stok vs Kecepatan Terjual" paling kritis
-    // Di backend, ini dihitung dengan (Total Terjual 7 Hari / 7) = Daily Velocity
-    // Days to Stockout = Sisa Stok / Daily Velocity
-    
-    // Untuk demonstrasi, kita filter produk yang stoknya di bawah threshold atau rendah
-    return products
-      .filter(p => p.stock_pcs <= p.low_stock_threshold || p.stock_pcs < 10)
-      .map(p => ({
-        id: p.id,
-        name: p.name,
-        stock: p.stock_pcs,
-        velocity: (Math.random() * 2 + 0.5).toFixed(1), // Simulasi velocity
-        daysLeft: Math.max(1, Math.floor(p.stock_pcs / (Math.random() * 2 + 0.5)))
-      }))
-      .sort((a, b) => a.daysLeft - b.daysLeft)
-      .slice(0, 3);
+  const [burnRateAlerts, setBurnRateAlerts] = useState([]);
+
+  useEffect(() => {
+    async function fetchBurnRate() {
+      try {
+        const data = await window.api?.intelligence?.getBurnRate();
+        if (data && data.length > 0) {
+          setBurnRateAlerts(data.slice(0, 3));
+        } else {
+          // Fallback: hitung dari products jika backend belum siap
+          const fallback = products
+            .filter(p => p.stock_pcs <= (p.low_stock_threshold || 10))
+            .map(p => ({ id: p.id, name: p.name, stock: p.stock_pcs, velocity: '0', daysLeft: p.stock_pcs }))
+            .sort((a, b) => a.daysLeft - b.daysLeft)
+            .slice(0, 3);
+          setBurnRateAlerts(fallback);
+        }
+      } catch (e) {
+        console.error('[PredictiveInsights] BurnRate error:', e);
+      }
+    }
+    fetchBurnRate();
   }, [products]);
 
   // =========================================================================
   // 🧠 DATA SCIENCE ENGINE 2: Lunar Whisper (Seasonal Forecasting)
   // =========================================================================
-  const lunarForecast = useMemo(() => {
-    // Logika perhitungan kalender Lunar via mapping data science
-    // Simulasi event Ce It atau Cap Go terdekat
-    return {
-      event: "Cap Go (15 Imlek)",
-      countdownDays: 14,
-      message: "Hari ini Ce It (1 Imlek) - 14 Hari menuju Cap Go",
-      action: "Segera restock Dupa Premium dan Kertas Sembahyang. Histori tahun lalu menunjukkan lonjakan 300% pada H-3."
-    };
+  const [lunarForecast, setLunarForecast] = useState({
+    event: null, countdownDays: 0,
+    message: "Memuat data kalender lunar...",
+    action: "Menghubungkan ke sistem astronomi..."
+  });
+
+  useEffect(() => {
+    async function fetchLunar() {
+      try {
+        const data = await window.api?.sembahyang?.getLunarDate();
+        if (!data) {
+          setLunarForecast({
+            event: null, countdownDays: 0,
+            message: "Kalender ritual tidak aktif",
+            action: "Aktifkan mode 'Toko Sembahyang' di Pengaturan untuk prediksi ritual lunar."
+          });
+          return;
+        }
+        const nearest = (data.daysUntilCeIt || 99) < (data.daysUntilCapGo || 99) ? 'Ce It' : 'Cap Go';
+        const daysNearest = Math.min(data.daysUntilCeIt || 99, data.daysUntilCapGo || 99);
+        let message, action;
+        if (data.isCeIt) {
+          message = `Hari ini Ce It — ${data.daysUntilCapGo} hari menuju Cap Go`;
+          action = "Stok dupa, lilin, dan kertas sembahyang harus penuh hari ini. Pastikan display ritual rapi.";
+        } else if (data.isCapGo) {
+          message = `Hari ini Cap Go — ${data.daysUntilCeIt} hari menuju Ce It berikutnya`;
+          action = "Hari puncak ritual. Pastikan stok premium tersedia dan tawarkan bundling paket sembahyang.";
+        } else if (daysNearest <= 3) {
+          message = `H-${daysNearest} menuju ${nearest}`;
+          action = `URGENT: Segera restock Dupa Premium dan Kertas Sembahyang. Lonjakan hingga 300% pada H-3.`;
+        } else if (daysNearest <= 7) {
+          message = `${daysNearest} hari menuju ${nearest}`;
+          action = `Persiapkan stok ritual untuk ${nearest}. Cek ketersediaan dupa, lilin merah, dan kertas emas.`;
+        } else {
+          message = `${daysNearest} hari menuju ${nearest} berikutnya`;
+          action = `Stok ritual aman. Pantau terus menjelang ${nearest}.`;
+        }
+        setLunarForecast({ event: data.label || nearest, countdownDays: daysNearest, message, action });
+      } catch (e) {
+        console.error('[PredictiveInsights] Lunar error:', e);
+      }
+    }
+    fetchLunar();
   }, []);
 
   return (

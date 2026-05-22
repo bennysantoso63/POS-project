@@ -197,7 +197,24 @@ function AppContent({ fetchData, posData }) {
         );
       case 'dashboard':    return <DashboardView transactions={transactions} products={products} formatIDR={formatIDR} />;
       case 'inventory':    return <InventoryView products={products} categories={categories} formatIDR={formatIDR} />;
-      case 'history':      return <HistoryView transactions={transactions} formatIDR={formatIDR} />;
+      case 'history':      
+        return (
+          <HistoryView 
+            transactions={transactions} 
+            formatIDR={formatIDR} 
+            currentUser={currentUser}
+            onPrintReceipt={(tx) => setReceiptToPrint({ type: 'transaction', data: tx })}
+            onVoidTransaction={async (id, sid) => {
+              const res = await window.api.voidTransaction(id, sid);
+              if (res?.success) {
+                toast.success(res?.message || "Transaksi berhasil dibatalkan");
+                fetchData();
+              } else {
+                toast.error(res?.message || "Gagal membatalkan transaksi");
+              }
+            }}
+          />
+        );
       case 'crm':
         return (
           <CrmView
@@ -306,7 +323,7 @@ function AppContent({ fetchData, posData }) {
 
   return (
     <div className="h-screen w-screen bg-brand-bg text-brand-text flex overflow-hidden font-sans">
-      <CockpitLayout userRole={role} terminalName={settings?.store_name || 'LING-LING POS'} onTabChange={setActiveView}>
+      <CockpitLayout userRole={role} terminalName={settings?.store_name || 'LING-LING POS'} onTabChange={setActiveView} products={products}>
         <Sidebar 
             activeTab={activeView} onTabChange={setActiveView} 
             currentUser={currentUser} onLogout={logout} 

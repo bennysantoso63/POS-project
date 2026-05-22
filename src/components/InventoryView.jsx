@@ -21,7 +21,9 @@ export default function InventoryView({
   const [categoryFilter, setCategoryFilter] = useState('Semua');
   const [sortBy, setSortBy] = useState('name'); 
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'owner' 
+       || currentUser?.role === 'manager'
+       || currentUser?.role === 'admin';
 
   // --- ANALISA DATA INVENTARIS ---
   const categories = ['Semua', ...new Set(products.map(p => p.category).filter(Boolean))];

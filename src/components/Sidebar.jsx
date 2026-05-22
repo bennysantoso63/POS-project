@@ -1,7 +1,7 @@
 import { 
   LayoutDashboard, ShoppingCart, Users, Package, Activity, 
   ReceiptText, Settings, LogOut, Store, Truck, Scan, Wallet, Landmark, CreditCard, BrainCircuit,
-  Sun, Moon, Power, ShieldCheck, Zap, RefreshCw, Tablet
+  Sun, Moon, Power, ShieldCheck, Zap, RefreshCw, Tablet, Cloud
 } from 'lucide-react';
 import avatarLingLing from '../assets/lingling.png';
 
@@ -9,15 +9,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSessionStore } from '../store/useSessionStore';
 import useUIStore from '../store/useUIStore';
 
-export default function Sidebar() {
+export default function Sidebar({ onOpenPettyCash }) {
   const { activeView: activeTab, setActiveView: onTabChange, isDarkMode, toggleDarkMode } = useUIStore();
   const { currentUser, logout, isOwner, isManager } = useAuth();
   const { activeSession } = useSessionStore();
 
-  // Temporary handlers (will be unified later if needed)
-  const onOpenPettyCash = () => {
-    // Logic for Petty Cash
-  };
   const navItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dasbor', show: true },
     { id: 'cashier', icon: ShoppingCart, label: 'Kasir', show: true },
@@ -100,6 +96,13 @@ export default function Sidebar() {
             </span>
           </button>
          )}
+
+          <div className="w-full flex items-center justify-center gap-2 py-2">
+            <Cloud className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="text-[8px] font-black tracking-[0.2em] uppercase text-emerald-500 opacity-70">
+              Synced
+            </span>
+          </div>
 
           <div className="w-full flex flex-col items-center gap-3 mt-4">
             <button 

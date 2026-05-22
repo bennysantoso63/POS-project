@@ -5,6 +5,11 @@ contextBridge.exposeInMainWorld('api', {
     checkSetup: () => ipcRenderer.invoke('api-check-setup'),
     setupAdmin: (data) => ipcRenderer.invoke('api-setup-admin', data),
     login: (pin) => ipcRenderer.invoke('api-login', pin),
+    createUser: (data) => ipcRenderer.invoke('api-create-user', data),
+    changePin: (data) => ipcRenderer.invoke('api-change-pin', data),
+    resetUserPin: (data) => ipcRenderer.invoke('api-reset-user-pin', data),
+    updateUserStatus: (id, isActive) => ipcRenderer.invoke('api-update-user-status', id, isActive),
+    backupDatabase: () => ipcRenderer.invoke('api-backup-database'),
 
     getUsers: () => ipcRenderer.invoke('api-get-users'),
 

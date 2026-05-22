@@ -102,7 +102,7 @@ const syncCustomersToGoogle = async () => {
 
     const service = google.people({ version: 'v1', auth: oauth2Client });
     const unsyncedCustomers = db.prepare(`
-      SELECT id, name, phone, email 
+      SELECT id, name, phone 
       FROM customers 
       WHERE google_contact_id IS NULL AND phone IS NOT NULL AND phone != ''
     `).all();
@@ -117,7 +117,7 @@ const syncCustomersToGoogle = async () => {
         contactPerson: {
           names: [{ givenName: c.name }],
           phoneNumbers: [{ value: c.phone, type: 'mobile' }],
-          emailAddresses: c.email ? [{ value: c.email, type: 'work' }] : []
+          emailAddresses: []
         }
       }));
 

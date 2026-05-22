@@ -51,7 +51,7 @@ export default function HistoryView({
   const handleVoidTrigger = (tx) => {
     if (tx.status === 'voided') return;
     
-    if (currentUser?.role === 'admin') {
+    if (currentUser?.role === 'admin' || currentUser?.role === 'owner') {
       if (window.confirm(`Apakah Anda yakin ingin membatalkan transaksi TX-${tx.id}?`)) {
         onVoidTransaction(tx.id, currentUser.id);
       }
@@ -62,14 +62,18 @@ export default function HistoryView({
 
   const handleAdminOverride = async (e) => {
     e.preventDefault();
-    // PIN admin sementara. Di produksi harusnya cek ke DB.
-    if (adminPin === '1234') {
-      onVoidTransaction(authModal.trxId, 'admin-id');
-      setAuthModal({ isOpen: false, trxId: null });
-      setAdminPin('');
-      notifySuccess('Otoritas Berhasil: Transaksi telah dibatalkan.');
-    } else {
-      notifyError('Otoritas Ditolak: PIN Admin salah.');
+    try {
+      const res = await window.api.login(adminPin);
+      if (res.success && (res.user.role === 'admin' || res.user.role === 'owner')) {
+        onVoidTransaction(authModal.trxId, res.user.id);
+        setAuthModal({ isOpen: false, trxId: null });
+        setAdminPin('');
+        notifySuccess('Otoritas Berhasil: Transaksi telah dibatalkan.');
+      } else {
+        notifyError(res.error || 'Otoritas Ditolak: PIN Admin/Owner salah.');
+      }
+    } catch (err) {
+      notifyError('Terjadi kesalahan sistem saat verifikasi PIN.');
     }
   };
 

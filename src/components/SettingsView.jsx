@@ -30,7 +30,7 @@ export default function SettingsView({
 
   useEffect(() => {
     if (isOwner) {
-      window.api?.invoke('api-get-users').then(data => setUsers(data || []));
+      window.api?.getUsers().then(data => setUsers(data || []));
     }
   }, [isOwner]);
 
@@ -43,7 +43,7 @@ export default function SettingsView({
 
   const handleUnlockSettings = async (e) => {
     e.preventDefault();
-    const res = await window.api?.invoke('api-login', unlockPin);
+    const res = await window.api?.login(unlockPin);
     if (res.success && res.user.role === 'owner') {
       setIsUnlocked(true);
       setShowUnlockModal(false);
@@ -67,7 +67,7 @@ export default function SettingsView({
       setPinStatus({ type: 'error', msg: 'PIN baru tidak cocok' });
       return;
     }
-    const res = await window.api.invoke('api-change-pin', {
+    const res = await window.api.changePin({
       userId: currentUser.id,
       oldPin: pinForm.oldPin,
       newPin: pinForm.newPin
@@ -86,13 +86,13 @@ export default function SettingsView({
   const handleResetUserPin = async (userId, username) => {
     const newPin = prompt(`Masukkan PIN baru untuk ${username} (4-6 digit):`);
     if (!newPin) return;
-    const res = await window.api?.invoke('api-update-user', userId, { pin: newPin, callerId: currentUser.id });
+    const res = await window.api?.resetUserPin({ targetUserId: userId, newPin, callerUserId: currentUser.id });
     if (res.success) toast.success(`PIN [${username}] Berhasil Diganti`);
-    else toast.error('Gagal mengganti PIN');
+    else toast.error('Gagal mengganti PIN: ' + (res.error || 'Akses ditolak'));
   };
 
   const handleBackup = async () => {
-    const res = await window.api?.invoke('api-backup-database');
+    const res = await window.api?.backupDatabase();
     if (res?.success) {
       toast.success('Database Berhasil Dicadangkan', {
         style: { background: '#10b981', color: '#fff', fontWeight: '700', fontSize: '10px' }
@@ -414,8 +414,16 @@ export default function SettingsView({
                 </p>
               </div>
               <div className="flex gap-6 mt-10 relative z-10">
-                <button onClick={() => window.api?.invoke('api-sync-cloud', { direction: 'push' })} className="flex-1 py-6 bg-brand-primary text-white rounded-[2rem] text-[10px] font-bold tracking-widest hover:bg-brand-secondary transition-all shadow-xl active:scale-95 group/btn border-2 border-white/10">Upload</button>
-                <button onClick={() => window.api?.invoke('api-sync-cloud', { direction: 'pull' })} className="flex-1 py-6 bg-brand-bg/60 border-2 border-brand-border rounded-[2rem] text-[10px] font-bold text-brand-muted tracking-widest hover:border-brand-primary/40 transition-all active:scale-95">Download</button>
+                <button onClick={async () => {
+                  try {
+                    const res = await window.api?.sync?.uploadToDrive("", "pos_mandiri.db");
+                    if (res?.success) toast.success("Backup Cloud Sukses");
+                    else toast.error(res?.error || "Gagal Backup Cloud");
+                  } catch (e) {
+                    toast.error("Gagal Backup Cloud");
+                  }
+                }} className="flex-1 py-6 bg-brand-primary text-white rounded-[2rem] text-[10px] font-bold tracking-widest hover:bg-brand-secondary transition-all shadow-xl active:scale-95 group/btn border-2 border-white/10">Upload</button>
+                <button onClick={() => toast.success("Silakan gunakan menu Sync untuk Omnichannel Sync", { icon: "ℹ️" })} className="flex-1 py-6 bg-brand-bg/60 border-2 border-brand-border rounded-[2rem] text-[10px] font-bold text-brand-muted tracking-widest hover:border-brand-primary/40 transition-all active:scale-95">Download</button>
               </div>
             </div>
 

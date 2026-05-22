@@ -42,13 +42,12 @@ export default function CashierView({
   // 🌙 SISTEM PENGINGAT HARI RAYA (Lunar Event Engine)
   // =========================================================================
   const getUpcomingLunarEvent = () => {
-    const today = new Date();
-    const day = today.getDate(); 
-    
-    if (day >= 13 && day <= 15) return { name: 'Cap Go Meh', daysLeft: 15 - day };
-    if (day >= 28 || day === 1) {
-        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-        return { name: 'Ce It (Sembahyang)', daysLeft: day === 1 ? 0 : (daysInMonth - day + 1) };
+    if (!lunarInfo) return null;
+    if (lunarInfo.isSembahyangDay && lunarInfo.currentEventName) {
+      return { name: lunarInfo.currentEventName, daysLeft: 0 };
+    }
+    if (lunarInfo.nextEventName && lunarInfo.daysToNextEvent !== undefined) {
+      return { name: lunarInfo.nextEventName, daysLeft: lunarInfo.daysToNextEvent };
     }
     return null;
   };
@@ -329,11 +328,12 @@ export default function CashierView({
       tax: billMetrics.taxAmt,
       service: billMetrics.serviceAmt,
       total: billMetrics.grandTotal,
-      paid_amount: paid,
-      change_amount: Math.max(0, paid - billMetrics.grandTotal),
-      payment_method: paymentMethod,
-      customer_id: paymentMethod === 'receivable' ? selectedCustomerId : null,
-      due_date: paymentMethod === 'receivable' ? dueDate : null,
+      amountPaid: paid,
+      changeAmount: Math.max(0, paid - billMetrics.grandTotal),
+      paymentMethod: paymentMethod,
+      customerId: paymentMethod === 'receivable' ? selectedCustomerId : null,
+      dueDate: paymentMethod === 'receivable' ? dueDate : null,
+      sessionId: activeSession?.id || null,
       items: cart.map(i => ({
         product_id: i.id,
         name: i.name,
@@ -758,6 +758,27 @@ export default function CashierView({
               </div>
             </div>
           ))}
+
+          {aprioriRules?.length > 0 && cart.length > 0 && (() => {
+            const cartIds = cart.map(i => i.id);
+            const suggestions = aprioriRules.filter(r =>
+              cartIds.includes(r.item_a_id) && !cartIds.includes(r.item_b_id)
+            ).slice(0, 3);
+
+            if (!suggestions.length) return null;
+            return (
+              <div className="mt-3 p-3 bg-brand-primary/5 border border-brand-primary/20 rounded-2xl animate-in slide-in-from-bottom-2 duration-300">
+                <p className="text-[8px] font-black text-brand-primary tracking-[0.2em] uppercase mb-2">
+                  ✨ Sering Dibeli Bersama
+                </p>
+                {suggestions.map((s, i) => (
+                  <p key={i} className="text-[10px] text-brand-muted mb-1">
+                    + {s.item_b_name}
+                  </p>
+                ))}
+              </div>
+            );
+          })()}
         </div>
         
         {/* PANEL PEMBAYARAN */}

@@ -83,7 +83,7 @@ const ScannerView = () => {
         try {
           // Gunakan constraint minimal dulu untuk diagnosa
           stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
+            video: { facingMode: { ideal: 'environment' } }
           });
         } catch (err) {
           console.log(err.name, err.message);
@@ -268,30 +268,30 @@ const ScannerView = () => {
   const pendingCount = inventoryEvents.filter(e => e.sync_status === 0).length;
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-100 p-4 md:p-6 font-sans max-w-3xl mx-auto">
+    <div className="flex flex-col h-full bg-transparent text-brand-text p-4 md:p-6 font-sans max-w-3xl mx-auto">
       {/* Header & Network Status */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <ScanLine className="text-amber-500" size={28} />
+          <h1 className="text-2xl font-bold text-brand-text flex items-center gap-2">
+            <ScanLine className="text-brand-primary" size={28} />
             Enterprise Scanner
           </h1>
-          <p className="text-slate-400 text-sm mt-1">v1.3 - Diagnosed Camera & Event Sourcing</p>
+          <p className="text-brand-muted text-sm mt-1">v1.3 - Diagnosed Camera & Event Sourcing</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           {/* Inertial Status */}
-          <div className="flex items-center gap-2 bg-brand-card/40 backdrop-blur-xl border-2 border-brand-border py-1.5 px-3 rounded-full">
-            <Activity size={16} className={isStable ? "text-emerald-400" : "text-rose-400"} />
+          <div className="flex items-center gap-2 bg-brand-card/50 backdrop-blur-xl border border-brand-border py-1.5 px-3 rounded-full">
+            <Activity size={16} className={isStable ? "text-brand-secondary" : "text-brand-accent"} />
             <span className="text-xs font-medium font-mono">{motionData} G</span>
           </div>
         </div>
       </div>
 
       {/* Main Camera View - Terapkan Styling Design System */}
-      <div className="relative h-64 md:h-80 shrink-0 rounded-3xl overflow-hidden bg-brand-card/40 backdrop-blur-xl border-2 border-brand-border shadow-2xl flex items-center justify-center">
+      <div className="relative h-64 md:h-80 shrink-0 rounded-3xl overflow-hidden bg-brand-card/50 backdrop-blur-xl border border-brand-border shadow-2xl flex items-center justify-center">
         
         {/* Flash Effect on Scan */}
-        <div className={`absolute inset-0 bg-emerald-400 mix-blend-overlay z-20 pointer-events-none transition-opacity duration-300 ${scanFlash ? 'opacity-40' : 'opacity-0'}`} />
+        <div className={`absolute inset-0 bg-brand-secondary mix-blend-overlay z-20 pointer-events-none transition-opacity duration-300 ${scanFlash ? 'opacity-40' : 'opacity-0'}`} />
 
         {isCameraActive ? (
           <video 
@@ -302,10 +302,10 @@ const ScannerView = () => {
             className="absolute inset-0 w-full h-full object-cover opacity-80"
           />
         ) : (
-          <div className="flex flex-col items-center text-slate-500 gap-3 z-10 p-6 text-center">
-            <Camera size={48} className={cameraError ? "text-rose-500/80" : "text-slate-500"} />
+          <div className="flex flex-col items-center text-brand-muted gap-3 z-10 p-6 text-center">
+            <Camera size={48} className={cameraError ? "text-brand-accent/80" : "text-brand-muted"} />
             {cameraError ? (
-              <p className="text-rose-400 font-medium text-sm">{cameraError}</p>
+              <p className="text-brand-accent font-medium text-sm">{cameraError}</p>
             ) : (
               <p>Meminta akses kamera...</p>
             )}
@@ -314,21 +314,21 @@ const ScannerView = () => {
 
         {/* Inertial HUD Overlay */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-          <div className={`w-48 h-32 md:w-64 md:h-48 border-4 transition-all duration-300 rounded-xl relative ${
-            isStable ? 'border-emerald-500 scale-100' : 'border-rose-500/50 scale-105'
+          <div className={`w-48 h-32 md:w-64 md:h-48 transition-all duration-300 rounded-xl relative ${
+            isStable ? 'scale-100' : 'scale-105'
           }`}>
-            <div className={`absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 transition-colors ${isStable ? 'border-emerald-400' : 'border-rose-400'}`}></div>
-            <div className={`absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 transition-colors ${isStable ? 'border-emerald-400' : 'border-rose-400'}`}></div>
-            <div className={`absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 transition-colors ${isStable ? 'border-emerald-400' : 'border-rose-400'}`}></div>
-            <div className={`absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 transition-colors ${isStable ? 'border-emerald-400' : 'border-rose-400'}`}></div>
+            <div className={`absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 transition-colors ${isStable ? 'border-indigo-400' : 'border-brand-accent/50'}`}></div>
+            <div className={`absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 transition-colors ${isStable ? 'border-indigo-400' : 'border-brand-accent/50'}`}></div>
+            <div className={`absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 transition-colors ${isStable ? 'border-indigo-400' : 'border-brand-accent/50'}`}></div>
+            <div className={`absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 transition-colors ${isStable ? 'border-indigo-400' : 'border-brand-accent/50'}`}></div>
             
             {isStable && (
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-emerald-400 shadow-[0_0_8px_#34d399] animate-scan"></div>
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-indigo-400 shadow-[0_0_8px_#818cf8] animate-scan"></div>
             )}
           </div>
 
           <div className={`mt-6 px-4 py-1.5 rounded-full backdrop-blur-md border flex items-center gap-2 transition-all duration-300 ${
-            isStable ? 'bg-emerald-500/30 border-emerald-500/50 text-emerald-300' : 'bg-slate-800/80 border-slate-600 text-slate-300'
+            isStable ? 'bg-brand-secondary/20 border-brand-secondary/30 text-brand-secondary' : 'bg-brand-card/85 border-brand-border text-brand-muted'
           }`}>
             {isStable ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
             <span className="text-[10px] font-black uppercase tracking-[0.3em]">
@@ -339,8 +339,8 @@ const ScannerView = () => {
       </div>
 
       {!permissionGranted && (
-        <div className="mt-4 p-3 bg-brand-card/40 backdrop-blur-xl border-2 border-brand-border rounded-xl text-amber-200 text-xs flex gap-3">
-          <AlertCircle className="shrink-0 text-amber-500" size={16} />
+        <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-600 dark:text-amber-400 text-xs flex gap-3">
+          <AlertCircle className="shrink-0 text-amber-500 animate-pulse" size={16} />
           <p>Akses sensor gerak diperlukan agar fitur anti-blur berfungsi maksimal.</p>
         </div>
       )}
@@ -348,8 +348,8 @@ const ScannerView = () => {
       {/* Offline Vault & Event Sourcing Panel - Terapkan Styling Design System */}
       <div className="mt-6 flex-grow flex flex-col min-h-[250px]">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-slate-300 text-sm font-bold uppercase tracking-[0.3em] flex items-center gap-2">
-            <Database size={16} className="text-blue-400" />
+          <h3 className="text-brand-muted text-sm font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+            <Database size={16} className="text-brand-secondary" />
             Brankas Data Lokal
           </h3>
           
@@ -358,8 +358,8 @@ const ScannerView = () => {
             disabled={pendingCount === 0 || isSyncing}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
               pendingCount > 0 
-                ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]' 
-                : 'bg-brand-card/40 border-2 border-brand-border text-slate-500 cursor-not-allowed'
+                ? 'bg-brand-secondary hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]' 
+                : 'bg-brand-card/50 border border-brand-border text-brand-muted/50 cursor-not-allowed'
             }`}
           >
             {isSyncing ? (
@@ -373,35 +373,35 @@ const ScannerView = () => {
         </div>
 
         {/* List Riwayat Scan */}
-        <div className="flex-grow bg-brand-card/40 backdrop-blur-xl border-2 border-brand-border rounded-xl overflow-hidden flex flex-col">
+        <div className="flex-grow bg-brand-card/30 backdrop-blur-xl border border-brand-border rounded-2xl overflow-hidden flex flex-col">
           {inventoryEvents.length === 0 ? (
-            <div className="flex-grow flex flex-col items-center justify-center text-slate-500 p-6 text-center">
+            <div className="flex-grow flex flex-col items-center justify-center text-brand-muted p-6 text-center">
               <Archive size={40} className="mb-3 opacity-20" />
               <p className="text-sm">Belum ada aktivitas pemindaian.</p>
-              <p className="text-xs mt-1 opacity-60">Arahkan kamera ke barcode untuk memulai.</p>
+              <p className="text-xs mt-1 text-brand-muted/60">Arahkan kamera ke barcode untuk memulai.</p>
             </div>
           ) : (
             <div className="overflow-y-auto max-h-[300px] p-2 space-y-2">
               {inventoryEvents.map((evt) => (
-                <div key={evt.id} className="bg-black/20 p-3 rounded-lg border border-brand-border/50 flex items-center justify-between animate-fade-in-up">
+                <div key={evt.id} className="bg-brand-bg/50 p-3 rounded-xl border border-brand-border/40 flex items-center justify-between animate-fade-in-up">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded bg-black/40 border ${evt.sync_status === 0 ? 'border-amber-500/30 text-amber-400' : 'border-emerald-500/30 text-emerald-400'}`}>
+                    <div className={`p-2 rounded-lg bg-brand-card border ${evt.sync_status === 0 ? 'border-amber-500/30 text-amber-500' : 'border-brand-secondary/30 text-brand-secondary'}`}>
                       <Barcode size={18} />
                     </div>
                     <div>
-                      <p className="font-mono text-white text-sm tracking-[0.3em]">{evt.barcode}</p>
-                      <p className="text-slate-400 text-xs">
+                      <p className="font-mono text-brand-text text-sm tracking-[0.3em]">{evt.barcode}</p>
+                      <p className="text-brand-muted text-xs">
                         {new Date(evt.timestamp).toLocaleTimeString('id-ID')} • Aksi: {evt.action.toUpperCase()}
                       </p>
                     </div>
                   </div>
                   <div>
                     {evt.sync_status === 0 ? (
-                      <span className="flex items-center gap-1 text-amber-400 text-xs font-medium bg-amber-400/10 px-2 py-1 rounded">
+                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 text-xs font-medium bg-amber-500/10 px-2 py-1 rounded">
                         <CloudOff size={12} /> Pending
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-emerald-400 text-xs font-medium bg-emerald-400/10 px-2 py-1 rounded">
+                      <span className="flex items-center gap-1 text-brand-secondary text-xs font-medium bg-brand-secondary/10 px-2 py-1 rounded">
                         <Cloud size={12} /> Synced
                       </span>
                     )}

@@ -289,6 +289,36 @@ function bootDeferredLogic() {
             : { connected: false }
     );
 
+    // 👤 USER MANAGEMENT (RBAC)
+    ipcMain.handle('api-create-user', async (e, d) => {
+        return auth.createUser(d.username, d.pin, d.role || 'cashier');
+    });
+    ipcMain.handle('api-change-pin', async (e, d) => {
+        return auth.changePin(d.userId, d.oldPin, d.newPin);
+    });
+    ipcMain.handle('api-reset-user-pin', async (e, d) => {
+        return auth.resetUserPin(d.targetUserId, d.newPin, d.callerUserId);
+    });
+    ipcMain.handle('api-update-user-status', (e, id, isActive) => {
+        return auth.updateUserStatus(id, isActive);
+    });
+
+    // 💾 BACKUP DATABASE
+    ipcMain.handle('api-backup-database', async () => {
+        try {
+            const fs = require('fs');
+            const srcPath = path.join(app.getPath('userData'), 'pos_mandiri.db');
+            const backupDir = path.join(app.getPath('userData'), 'backups');
+            if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+            const ts = new Date().toISOString().replace(/[:.]/g, '-');
+            const destPath = path.join(backupDir, `pos_mandiri_backup_${ts}.db`);
+            fs.copyFileSync(srcPath, destPath);
+            return { success: true, path: destPath };
+        } catch (err) {
+            return { success: false, error: err.message };
+        }
+    });
+
     // ⚙️ SETTINGS & HARDWARE
     ipcMain.handle('api-get-settings', () => {
         const rows = db.prepare('SELECT * FROM settings').all();
